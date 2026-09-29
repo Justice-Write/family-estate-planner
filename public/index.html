@@ -1,140 +1,461 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Family Estate & Trip Planner</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Christian's Annual Family Trip & Generational Wealth Scouting</title>
+    <link rel="icon" href="data:,">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        brand: {
+                            navy: '#0f172a',
+                            gold: '#cda85f',
+                            lightgold: '#fdfbf7',
+                            light: '#f8fafc',
+                            card: '#ffffff'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08);
+            border: 1px solid rgba(205, 168, 95, 0.15);
+        }
+        .toast {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            transform: translateY(20px);
+            opacity: 0;
+            visibility: hidden;
+        }
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+            visibility: visible;
+        }
+        .spinner {
+            border: 3px solid rgba(205, 168, 95, 0.2);
+            border-top: 3px solid #cda85f;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cda85f; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #b59045; }
+
+        .property-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .property-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.15);
+        }
+        .property-voted {
+            border: 2px solid #cda85f !important;
+            background-color: #fdfbf7;
+        }
+        .hidden-section { display: none !important; }
+    </style>
 </head>
-<body>
+<body class="font-sans antialiased min-h-screen flex flex-col relative">
 
-<nav class="nav">
-  <h1>Family Estate & Trip Planner</h1>
-  <div class="nav-right">
-    <span id="navUser" class="muted small"></span>
-    <button id="logoutBtn" class="link hidden">Sign Out</button>
-  </div>
-</nav>
-
-<main class="container">
-  <div id="toast" class="toast hidden"></div>
-
-  <!-- Auth -->
-  <section id="authSection" class="panel narrow">
-    <h2 class="serif center">Family Access</h2>
-    <p class="muted center small">One account per adult. If you don't have one yet, the same button registers you.</p>
-    <form id="authForm" class="stack">
-      <input type="email" id="emailInput" placeholder="Email address" autocomplete="email" required>
-      <input type="password" id="passwordInput" placeholder="Password (8+ characters)" autocomplete="current-password" minlength="8" required>
-      <button type="submit" class="btn primary block" id="authBtn">Login / Register</button>
-    </form>
-    <p id="authMsg" class="small center muted"></p>
-  </section>
-
-  <!-- Choose: create or join -->
-  <section id="chooseSection" class="hidden stack-lg">
-    <div class="center">
-      <h2 class="serif">Welcome to the Command Center</h2>
-      <p class="muted">Coordinate the vacation. Scout the generational asset.</p>
-    </div>
-    <div id="partySelection" class="choice-row">
-      <button class="btn primary big" data-show="createForm">Create New Party<br><small>Head of Household</small></button>
-      <button class="btn outline big" data-show="joinForm">Join Existing Party<br><small>Secondary Member</small></button>
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-brand-navy text-white px-6 py-3 rounded-full shadow-2xl z-50 flex items-center gap-3 border border-brand-gold/30">
+        <i class="fas fa-check-circle text-brand-gold" id="toast-icon"></i>
+        <span id="toast-message" class="text-sm font-medium tracking-wide">Message</span>
     </div>
 
-    <form id="createForm" class="panel narrow hidden stack">
-      <h3 class="serif">Name your party</h3>
-      <p class="small muted">Usually the family surname. You'll get a Party ID to hand to the rest of your household.</p>
-      <input type="text" id="partyNameInput" placeholder="e.g. Smith" maxlength="40" required>
-      <button type="submit" class="btn primary block">Create Party & Continue</button>
-    </form>
-
-    <form id="joinForm" class="panel narrow hidden stack">
-      <h3 class="serif">Join your family's party</h3>
-      <p class="small muted">Enter the Party ID from your Head of Household. This links your account so budgets and headcounts aren't duplicated.</p>
-      <input type="text" id="partyCodeInput" placeholder="Party ID (e.g. SMITH-4821)" required>
-      <button type="submit" class="btn primary block">Link Account & Proceed to Voting</button>
-    </form>
-  </section>
-
-  <!-- Dashboard -->
-  <section id="dashboardSection" class="hidden stack-lg">
-
-    <div class="party-bar">
-      <div>
-        <div class="small muted">Your party</div>
-        <div class="serif party-name" id="partyName"></div>
-      </div>
-      <div class="party-code-wrap">
-        <div class="small muted">Party ID — share with your household</div>
-        <button id="copyCode" class="code" title="Copy"></button>
-      </div>
-      <div id="rosterWrap" class="small muted"></div>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 z-50 bg-brand-light flex flex-col items-center justify-center">
+        <div class="spinner mb-6"></div>
+        <h2 class="font-serif text-2xl text-brand-navy tracking-wide">Accessing Family Trust...</h2>
+        <p id="loading-text" class="text-gray-500 mt-2 text-sm">Authenticating connection</p>
     </div>
 
-    <!-- Logistics (head edits, members read) -->
-    <div class="panel stack" id="logisticsPanel">
-      <h3 class="serif underline">Trip Logistics & Budget</h3>
-      <p id="logisticsNote" class="small muted hidden">Only your Head of Household can edit this section.</p>
-      <fieldset id="logisticsFields" class="stack">
-        <div>
-          <label for="partySize">Party size (including yourself)</label>
-          <select id="partySize" class="third"></select>
+    <!-- Identity Modal -->
+    <div id="auth-modal" class="hidden fixed inset-0 z-40 bg-brand-navy/95 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass-card p-10 rounded-2xl max-w-md w-full shadow-2xl text-center">
+            <i class="fas fa-gem text-4xl text-brand-gold mb-4"></i>
+            <h2 class="font-serif text-3xl font-semibold mb-2 text-brand-navy">Family Syndicate</h2>
+            <p class="text-gray-500 mb-8 text-sm">Sign in to access the scouting portal. First time here? The same button creates your account.</p>
+            <form id="auth-form" class="text-left space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Your Full Name</label>
+                    <input type="text" id="auth-name" autocomplete="name" class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-gold focus:border-brand-gold outline-none transition-all bg-gray-50 text-brand-navy" placeholder="e.g., Grandma Smith">
+                    <p class="text-[11px] text-gray-400 mt-1">Needed the first time only.</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Email</label>
+                    <input type="email" id="auth-email" autocomplete="email" required class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-gold focus:border-brand-gold outline-none transition-all bg-gray-50 text-brand-navy" placeholder="you@example.com">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Password</label>
+                    <input type="password" id="auth-password" autocomplete="current-password" minlength="8" required class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-gold focus:border-brand-gold outline-none transition-all bg-gray-50 text-brand-navy" placeholder="8+ characters">
+                </div>
+                <button type="submit" id="auth-btn" class="w-full bg-brand-navy text-white py-3.5 rounded-lg font-medium hover:bg-gray-800 transition-colors shadow-lg shadow-brand-navy/20">
+                    Continue
+                </button>
+            </form>
         </div>
-        <div id="membersContainer" class="members"></div>
-        <div class="grid3">
-          <div><label for="budgetTotal">Total trip budget (USD)</label><input type="number" id="budgetTotal" min="0" step="100" placeholder="$"></div>
-          <div><label for="budgetPerDay">Max per person / day (USD)</label><input type="number" id="budgetPerDay" min="0" step="10" placeholder="$"></div>
-          <div><label for="dates">Preferred dates</label><input type="text" id="dates" placeholder="e.g. Dec 15 – Jan 5"></div>
+    </div>
+
+    <!-- Party Selection Modal -->
+    <div id="party-modal" class="hidden fixed inset-0 z-40 bg-brand-navy/95 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div class="glass-card p-8 md:p-10 rounded-2xl max-w-2xl w-full shadow-2xl my-8">
+            <div class="text-center mb-8">
+                <i class="fas fa-users text-4xl text-brand-gold mb-4"></i>
+                <h2 class="font-serif text-3xl font-semibold mb-2 text-brand-navy">Household Assignment</h2>
+                <p class="text-gray-500 text-sm">To avoid duplicate headcount and budget entries, please let us know if you are leading a new party or joining an existing one.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Join Existing -->
+                <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                    <h3 class="font-bold text-brand-navy mb-2"><i class="fas fa-user-plus text-brand-gold mr-2"></i>Join Existing Party</h3>
+                    <p class="text-xs text-gray-500 mb-4">Someone else has already filled out the logistics for my group (e.g., my spouse or parent).</p>
+                    <select id="existing-parties-dropdown" class="w-full px-4 py-3 mb-4 bg-white border border-gray-300 rounded-lg text-sm focus:border-brand-gold outline-none">
+                        <option value="">Loading parties...</option>
+                    </select>
+                    <button onclick="joinParty()" class="w-full bg-white border-2 border-brand-navy text-brand-navy py-2.5 rounded-lg font-bold hover:bg-brand-navy hover:text-white transition-colors">
+                        Join Party
+                    </button>
+                </div>
+
+                <!-- Create New -->
+                <div class="bg-brand-navy p-6 rounded-xl border border-brand-gold/30 text-white">
+                    <h3 class="font-bold text-brand-gold mb-2"><i class="fas fa-crown mr-2"></i>Create New Party</h3>
+                    <p class="text-xs text-gray-300 mb-4">I am the Head of Household and will fill out the headcount and budget for my group.</p>
+                    <input type="text" id="new-party-name" class="w-full px-4 py-3 mb-4 bg-white/10 border border-white/20 rounded-lg text-sm text-white focus:border-brand-gold outline-none" placeholder="e.g., The Smith Family">
+                    <button onclick="createParty()" class="w-full bg-brand-gold text-brand-navy py-2.5 rounded-lg font-bold hover:bg-[#b59045] transition-colors">
+                        Establish Party
+                    </button>
+                </div>
+            </div>
         </div>
-      </fieldset>
     </div>
 
-    <!-- Co-buy -->
-    <div class="panel dark stack" id="cobuyPanel">
-      <h3 class="serif gold">Generational Wealth & Co-Buying</h3>
-      <p>This trip has a dual purpose: a vacation, and a due-diligence tour of real estate the family could acquire together through a Family LLC.</p>
-      <div class="inset">
-        <h4 class="gold">How it would work</h4>
-        <ul>
-          <li>Participating households fund an LLC. The LLC seeks a commercial or portfolio loan for the asset.</li>
-          <li>The property serves as a private family retreat and an international short-term rental.</li>
-          <li>Rental income services the debt and funds management (staff, maintenance).</li>
-        </ul>
-        <p class="small muted-light">Nothing here is legal, tax, or investment advice. Structure, jurisdiction, and lending terms get reviewed with a licensed professional before any commitment.</p>
-      </div>
-      <fieldset id="cobuyFields" class="stack">
-        <label class="check"><input type="checkbox" id="cobuyInterest"><span>My household is interested in exploring co-ownership.</span></label>
-        <div id="cobuyQuestions" class="hidden stack indent">
-          <div><label for="cobuyCapital">Estimated capital contribution range</label><input type="text" id="cobuyCapital" placeholder="e.g. $50k – $100k"></div>
-          <div><label for="cobuyBorrow">Open to being a co-borrower on a joint loan?</label>
-            <select id="cobuyBorrow"><option value="">—</option><option>Yes</option><option>Maybe</option><option>No</option></select></div>
+    <!-- Zillow-Style Property Modal -->
+    <div id="property-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-6 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden flex flex-col shadow-2xl transform scale-95 transition-transform duration-300" id="property-modal-content">
+            <!-- Modal Header (Sticky) -->
+            <div class="flex justify-between items-center p-4 border-b border-gray-100 bg-white sticky top-0 z-10">
+                <h3 class="font-serif text-2xl font-bold text-brand-navy" id="modal-title">Property Title</h3>
+                <button onclick="closePropertyModal()" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Scrollable Content -->
+            <div class="overflow-y-auto flex-grow p-0">
+                <!-- Hero Image -->
+                <div class="w-full h-64 sm:h-96 bg-gray-200 relative">
+                    <img id="modal-image" src="" alt="Property" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                    <div class="absolute bottom-4 left-6 text-white">
+                        <p class="text-sm uppercase tracking-widest font-semibold text-brand-gold drop-shadow-md mb-1" id="modal-location"><i class="fas fa-map-marker-alt"></i> Location</p>
+                    </div>
+                </div>
+
+                <div class="p-6 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- Left: Details -->
+                    <div class="md:col-span-2 space-y-6">
+                        <div class="flex flex-wrap gap-4 text-sm mb-4" id="modal-tags">
+                            <!-- Populated by JS -->
+                        </div>
+
+                        <div>
+                            <h4 class="font-serif text-xl font-semibold mb-3 text-brand-navy">About this Estate</h4>
+                            <p class="text-gray-600 leading-relaxed text-sm md:text-base" id="modal-description">
+                                Description goes here.
+                            </p>
+                        </div>
+
+                        <div class="border-t border-gray-100 pt-6">
+                            <h4 class="font-semibold text-brand-navy mb-4 uppercase tracking-wide text-sm">Amenities & Specs</h4>
+                            <ul class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-700" id="modal-amenities">
+                                <!-- Populated by JS -->
+                            </ul>
+                        </div>
+
+                        <!-- Warnings Box -->
+                        <div id="modal-warning-container" class="hidden mt-6 p-4 rounded-xl border border-red-200 bg-red-50 flex items-start gap-3">
+                            <i class="fas fa-exclamation-triangle text-red-500 mt-1"></i>
+                            <div>
+                                <h5 class="font-bold text-red-800 text-sm">Due Diligence Risk Warning</h5>
+                                <p class="text-xs text-red-700 mt-1" id="modal-warning-text">Warning text.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Financials & Action -->
+                    <div class="bg-brand-lightgold/50 p-6 rounded-xl border border-brand-gold/20 h-fit sticky top-6">
+                        <h4 class="font-serif text-lg font-semibold text-brand-navy mb-4 border-b border-brand-gold/20 pb-2">Financial Overview</h4>
+                        
+                        <div class="space-y-4 mb-6" id="modal-financials">
+                            <!-- Populated by JS -->
+                        </div>
+
+                        <div class="text-xs text-gray-500 mb-6 italic bg-white p-3 rounded border border-gray-100">
+                            <strong>Note:</strong> Private Chef & Butler add-ons estimate ~$700/day combined (excluding raw grocery costs).
+                        </div>
+
+                        <button id="modal-vote-btn" onclick="toggleVoteCurrentProperty()" class="w-full py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 border-2 border-brand-navy text-brand-navy hover:bg-brand-navy hover:text-white">
+                            <i class="far fa-heart" id="modal-vote-icon"></i> <span id="modal-vote-text">Vote for this Estate</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
-      </fieldset>
     </div>
 
-    <div class="center" id="saveRow">
-      <button id="saveLogistics" class="btn primary">Save Logistics & Co-Buy Answers</button>
-      <span id="saveMsg" class="small muted"></span>
+    <div id="main-app" class="hidden flex-col min-h-screen">
+        
+        <!-- Premium Header -->
+        <header class="bg-brand-navy text-white border-b border-brand-gold/20 sticky top-0 z-30">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+                <div>
+                    <h1 class="font-serif text-xl md:text-2xl font-bold text-brand-lightgold tracking-tight">Christian's Annual Family Trip</h1>
+                    <p class="text-[10px] md:text-xs text-brand-gold/80 font-medium tracking-widest uppercase mt-0.5">Generational Wealth Scouting Portal</p>
+                </div>
+                <div class="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-full border border-white/10">
+                    <div class="flex flex-col items-end">
+                        <span id="display-user-name" class="font-medium text-sm">Guest</span>
+                        <span id="display-party-role" class="text-[9px] text-brand-gold uppercase tracking-wider">Role</span>
+                    </div>
+                    <i class="fas fa-user-circle text-brand-gold text-xl"></i>
+                    <button onclick="signOut()" title="Sign out" class="ml-2 text-gray-400 hover:text-brand-gold transition-colors"><i class="fas fa-sign-out-alt"></i></button>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+            
+            <!-- Generational Wealth Explainer -->
+            <section class="glass-card rounded-2xl overflow-hidden shadow-lg border border-brand-gold/30">
+                <div class="grid grid-cols-1 md:grid-cols-12">
+                    <div class="md:col-span-4 bg-brand-navy p-8 text-white flex flex-col justify-center relative overflow-hidden">
+                        <div class="absolute top-0 right-0 -mt-10 -mr-10 text-brand-gold/10 text-9xl">
+                            <i class="fas fa-chess-rook"></i>
+                        </div>
+                        <h2 class="font-serif text-3xl font-bold mb-4 relative z-10 text-brand-gold">The Master Plan</h2>
+                        <p class="text-gray-300 text-sm leading-relaxed relative z-10">
+                            This trip is more than a vacation. It's a due-diligence mission to identify, test, and potentially acquire a global family estate. By combining our resources, we can secure an asset that serves the family for generations.
+                        </p>
+                    </div>
+                    <div class="md:col-span-8 p-6 md:p-8 bg-gradient-to-br from-white to-brand-lightgold/30">
+                        <h3 class="font-serif text-xl font-semibold mb-4 text-brand-navy">How LLC Co-Acquisition Works</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                                <div class="w-10 h-10 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold mb-3">
+                                    <i class="fas fa-file-signature text-lg"></i>
+                                </div>
+                                <h4 class="font-bold text-brand-navy mb-2 text-sm">1. Form the Syndicate</h4>
+                                <p class="text-xs text-gray-600 leading-relaxed">Multiple households form a unified LLC. This entity officially purchases the property, insulating individual personal assets from liability.</p>
+                            </div>
+                            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                                <div class="w-10 h-10 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold mb-3">
+                                    <i class="fas fa-hand-holding-usd text-lg"></i>
+                                </div>
+                                <h4 class="font-bold text-brand-navy mb-2 text-sm">2. Pool the Capital</h4>
+                                <p class="text-xs text-gray-600 leading-relaxed">A $1M estate split 5 ways requires a $200k investment per family. Commercial mortgages can be secured jointly via the LLC.</p>
+                            </div>
+                            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                                <div class="w-10 h-10 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold mb-3">
+                                    <i class="fas fa-calendar-check text-lg"></i>
+                                </div>
+                                <h4 class="font-bold text-brand-navy mb-2 text-sm">3. Shared Usage</h4>
+                                <p class="text-xs text-gray-600 leading-relaxed">Each family is allocated guaranteed weeks. Unused time is rented via luxury agencies, generating passive income.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div id="logistics-section" class="hidden-section">
+                <div class="mb-4">
+                    <h2 class="font-serif text-2xl font-bold text-brand-navy border-l-4 border-brand-gold pl-3">Household Logistics Intake</h2>
+                    <p class="text-sm text-gray-500 mt-1 pl-4">As the Head of Household for <strong id="display-party-name" class="text-brand-navy"></strong>, please fill out your group's details.</p>
+                </div>
+                
+                <form id="logistics-form" class="space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        
+                        <!-- Party Configuration -->
+                        <div class="lg:col-span-5 space-y-6">
+                            <div class="glass-card p-6 rounded-2xl">
+                                <h3 class="font-serif text-lg font-semibold mb-4 border-b border-gray-100 pb-2"><i class="fas fa-users text-brand-gold mr-2"></i> Household Members</h3>
+                                
+                                <div class="mb-5">
+                                    <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Total Party Size</label>
+                                    <div class="flex items-center gap-3">
+                                        <button type="button" onclick="adjustPartySize(-1)" class="w-10 h-10 rounded-lg bg-gray-100 hover:bg-gray-200 text-brand-navy font-bold text-xl flex items-center justify-center transition-colors">-</button>
+                                        <input type="number" id="input-party-size" min="1" max="20" value="1" class="w-16 text-center py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-gold outline-none font-bold text-lg" required readonly>
+                                        <button type="button" onclick="adjustPartySize(1)" class="w-10 h-10 rounded-lg bg-gray-100 hover:bg-gray-200 text-brand-navy font-bold text-xl flex items-center justify-center transition-colors">+</button>
+                                    </div>
+                                </div>
+    
+                                <div id="dynamic-members-container" class="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+                        </div>
+    
+                        <!-- Budgets & Dates -->
+                        <div class="lg:col-span-7 space-y-6">
+                            <div class="glass-card p-6 rounded-2xl">
+                                <h3 class="font-serif text-lg font-semibold mb-4 border-b border-gray-100 pb-2"><i class="fas fa-wallet text-brand-gold mr-2"></i> Budget & Timing</h3>
+                                
+                                <div class="space-y-4 mb-6">
+                                    <div>
+                                        <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Total Trip Budget ($)</label>
+                                        <div class="relative">
+                                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">$</span>
+                                            <input type="number" id="budget-total" placeholder="15000" class="w-full pl-8 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:border-brand-gold outline-none" required>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-[10px] font-semibold uppercase text-gray-500 mb-1">Max Per Person</label>
+                                            <input type="number" id="budget-pp" placeholder="3000" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:border-brand-gold outline-none">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-semibold uppercase text-gray-500 mb-1">Max Per Day</label>
+                                            <input type="number" id="budget-pd" placeholder="500" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:border-brand-gold outline-none">
+                                        </div>
+                                    </div>
+                                </div>
+    
+                                <h4 class="text-xs font-semibold uppercase text-brand-navy mb-2">Preferred Dates</h4>
+                                <div id="dates-container" class="space-y-2 mb-3">
+                                    <!-- Populated by JS -->
+                                </div>
+                                <button type="button" onclick="addDateRow()" class="text-xs font-bold text-brand-gold hover:text-yellow-600 transition-colors flex items-center gap-1">
+                                    <i class="fas fa-plus-circle"></i> Add Date Range
+                                </button>
+                            </div>
+
+                            <!-- Investment Questionnaire -->
+                            <div class="glass-card p-6 rounded-2xl bg-brand-navy text-white relative overflow-hidden">
+                                <div class="absolute -bottom-10 -right-10 text-white/5 text-9xl pointer-events-none">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                
+                                <h3 class="font-serif text-xl font-semibold mb-2 text-brand-gold"><i class="fas fa-building mr-2"></i> Syndicate Investment Interest</h3>
+                                <p class="text-sm text-gray-300 mb-6">To assess our buying power, we need preliminary financials. <span class="italic text-brand-lightgold">This data is strictly private.</span></p>
+                                
+                                <label class="flex items-start gap-4 cursor-pointer mb-6 group bg-white/5 p-4 rounded-xl hover:bg-white/10 transition-colors border border-white/10">
+                                    <div class="relative w-6 h-6 border-2 border-brand-gold rounded overflow-hidden flex-shrink-0 mt-0.5 bg-brand-navy">
+                                        <input type="checkbox" id="invest-interest" class="absolute inset-0 opacity-0 cursor-pointer z-10" onchange="toggleInvestmentFields()">
+                                        <div class="absolute inset-0 bg-brand-gold transform scale-0 transition-transform duration-200 flex items-center justify-center text-brand-navy" id="invest-check-bg">
+                                            <i class="fas fa-check text-xs font-bold"></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span class="font-bold text-base block mb-1 text-white group-hover:text-brand-gold transition-colors">Yes, we are interested.</span>
+                                        <span class="text-xs text-gray-400 block">My household is open to exploring LLC co-investment for a family estate.</span>
+                                    </div>
+                                </label>
+    
+                                <div id="investment-fields" class="hidden space-y-4 p-5 bg-black/30 border border-white/10 rounded-xl">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-[10px] font-semibold uppercase text-gray-400 mb-1.5">Liquid Capital (Down Payment)</label>
+                                            <select id="invest-capital" class="w-full px-3 py-2 bg-brand-navy border border-gray-600 rounded-lg text-white focus:border-brand-gold outline-none text-sm appearance-none">
+                                                <option value="" disabled selected>Select available capital...</option>
+                                                <option value="10k-50k">$10,000 - $50,000</option>
+                                                <option value="50k-100k">$50,000 - $100,000</option>
+                                                <option value="100k-250k">$100,000 - $250,000</option>
+                                                <option value="250k+">$250,000+</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-semibold uppercase text-gray-400 mb-1.5">Annual Household Income</label>
+                                            <select id="invest-income" class="w-full px-3 py-2 bg-brand-navy border border-gray-600 rounded-lg text-white focus:border-brand-gold outline-none text-sm appearance-none">
+                                                <option value="" disabled selected>Select income range...</option>
+                                                <option value="100k-150k">$100k - $150k</option>
+                                                <option value="150k-250k">$150k - $250k</option>
+                                                <option value="250k-500k">$250k - $500k</option>
+                                                <option value="500k+">$500k+</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" id="submit-logistics-btn" class="w-full bg-brand-navy text-white font-bold text-lg py-4 rounded-xl hover:bg-gray-800 transition-all shadow-lg flex justify-center items-center gap-3">
+                                <i class="fas fa-save"></i> Save Household Logistics
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                
+                <hr class="border-gray-200 my-10">
+            </div>
+
+            <div id="voting-section">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
+                    <div>
+                        <h3 class="font-serif text-3xl font-bold text-brand-navy"><i class="fas fa-globe-americas text-brand-gold mr-3"></i> Global Estate Targets</h3>
+                        <p class="text-sm text-gray-500 mt-2 max-w-3xl">Review the curated list of global properties. Click on an estate to view financial due diligence, risk warnings, and to cast your individual vote. Everyone in the family gets to vote! Votes save instantly; the tally under each estate is your whole party.</p>
+                    </div>
+                    <div class="text-sm font-bold text-brand-navy bg-brand-gold/20 border border-brand-gold/40 px-4 py-2 rounded-full whitespace-nowrap flex items-center gap-2 shadow-sm">
+                        <i class="fas fa-poll text-brand-gold"></i> Your Votes: <span id="vote-count" class="text-lg bg-white px-2 py-0.5 rounded-md shadow-inner text-brand-gold">0</span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="estates-grid">
+                    <!-- Populated dynamically via JS -->
+                </div>
+
+                <div class="mt-8 glass-card p-6 rounded-2xl flex flex-col sm:flex-row gap-4 items-center justify-between">
+                    <div class="w-full">
+                        <label class="block text-xs font-semibold uppercase text-gray-500 mb-2">Have a suggestion not on the list?</label>
+                        <input type="text" id="custom-suggestion" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm focus:border-brand-gold outline-none" placeholder="Drop a Zillow or Airbnb link here...">
+                    </div>
+                    <button onclick="saveVotes()" id="save-votes-btn" class="w-full sm:w-auto bg-brand-gold text-brand-navy px-8 py-3 rounded-lg font-bold hover:bg-[#b59045] transition-colors whitespace-nowrap shadow-lg shadow-brand-gold/30">
+                        Submit Votes
+                    </button>
+                </div>
+            </div>
+            
+        </main>
     </div>
 
-    <!-- Properties -->
-    <div class="stack">
-      <h3 class="serif underline">Global Target Properties</h3>
-      <p class="muted">Review the assets. Vote for every trip you'd take — votes are per person and the party's tally shows on each card.</p>
-      <p id="lockedBanner" class="banner hidden">Votes are locked for this party.</p>
-      <div id="propertyGrid" class="grid3"></div>
-    </div>
-
-    <div class="center lock-row" id="lockRow">
-      <button id="lockVotes" class="btn gold big">Lock Party Votes</button>
-      <p class="small muted">Head of Household only. Locking freezes every member's votes — do this once everyone has voted.</p>
-    </div>
-  </section>
-</main>
-
-<script type="module" src="app.js"></script>
+    
+    <script type="module" src="app.js"></script>
 </body>
 </html>
