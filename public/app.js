@@ -48,6 +48,11 @@ $('auth-form').addEventListener('submit', async (e) => {
       if (e2) throw e2;
       if (!data.session) { showToast('Account created. Check your email to confirm, then sign in.'); return; }
     } else if (error) throw error;
+    else if (name) {
+      // Existing account signing in with a name typed: backfill it if none is saved yet.
+      const { data: { user } } = await sb.auth.getUser();
+      if (user && !user.user_metadata?.name) { await sb.auth.updateUser({ data: { name } }); state.name = name; $('display-user-name').textContent = name; }
+    }
   } catch (err) { showToast(friendly(err.message), 'error'); }
   finally { btn.disabled = false; btn.textContent = 'Continue'; }
 });
