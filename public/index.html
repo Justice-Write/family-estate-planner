@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Family Estate & Trip Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="nav">
+  <h1>Family Estate & Trip Planner</h1>
+  <div class="nav-right">
+    <span id="navUser" class="muted small"></span>
+    <button id="logoutBtn" class="link hidden">Sign Out</button>
+  </div>
+</nav>
+
+<main class="container">
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- Auth -->
+  <section id="authSection" class="panel narrow">
+    <h2 class="serif center">Family Access</h2>
+    <p class="muted center small">One account per adult. If you don't have one yet, the same button registers you.</p>
+    <form id="authForm" class="stack">
+      <input type="email" id="emailInput" placeholder="Email address" autocomplete="email" required>
+      <input type="password" id="passwordInput" placeholder="Password (8+ characters)" autocomplete="current-password" minlength="8" required>
+      <button type="submit" class="btn primary block" id="authBtn">Login / Register</button>
+    </form>
+    <p id="authMsg" class="small center muted"></p>
+  </section>
+
+  <!-- Choose: create or join -->
+  <section id="chooseSection" class="hidden stack-lg">
+    <div class="center">
+      <h2 class="serif">Welcome to the Command Center</h2>
+      <p class="muted">Coordinate the vacation. Scout the generational asset.</p>
+    </div>
+    <div id="partySelection" class="choice-row">
+      <button class="btn primary big" data-show="createForm">Create New Party<br><small>Head of Household</small></button>
+      <button class="btn outline big" data-show="joinForm">Join Existing Party<br><small>Secondary Member</small></button>
+    </div>
+
+    <form id="createForm" class="panel narrow hidden stack">
+      <h3 class="serif">Name your party</h3>
+      <p class="small muted">Usually the family surname. You'll get a Party ID to hand to the rest of your household.</p>
+      <input type="text" id="partyNameInput" placeholder="e.g. Smith" maxlength="40" required>
+      <button type="submit" class="btn primary block">Create Party & Continue</button>
+    </form>
+
+    <form id="joinForm" class="panel narrow hidden stack">
+      <h3 class="serif">Join your family's party</h3>
+      <p class="small muted">Enter the Party ID from your Head of Household. This links your account so budgets and headcounts aren't duplicated.</p>
+      <input type="text" id="partyCodeInput" placeholder="Party ID (e.g. SMITH-4821)" required>
+      <button type="submit" class="btn primary block">Link Account & Proceed to Voting</button>
+    </form>
+  </section>
+
+  <!-- Dashboard -->
+  <section id="dashboardSection" class="hidden stack-lg">
+
+    <div class="party-bar">
+      <div>
+        <div class="small muted">Your party</div>
+        <div class="serif party-name" id="partyName"></div>
+      </div>
+      <div class="party-code-wrap">
+        <div class="small muted">Party ID — share with your household</div>
+        <button id="copyCode" class="code" title="Copy"></button>
+      </div>
+      <div id="rosterWrap" class="small muted"></div>
+    </div>
+
+    <!-- Logistics (head edits, members read) -->
+    <div class="panel stack" id="logisticsPanel">
+      <h3 class="serif underline">Trip Logistics & Budget</h3>
+      <p id="logisticsNote" class="small muted hidden">Only your Head of Household can edit this section.</p>
+      <fieldset id="logisticsFields" class="stack">
+        <div>
+          <label for="partySize">Party size (including yourself)</label>
+          <select id="partySize" class="third"></select>
+        </div>
+        <div id="membersContainer" class="members"></div>
+        <div class="grid3">
+          <div><label for="budgetTotal">Total trip budget (USD)</label><input type="number" id="budgetTotal" min="0" step="100" placeholder="$"></div>
+          <div><label for="budgetPerDay">Max per person / day (USD)</label><input type="number" id="budgetPerDay" min="0" step="10" placeholder="$"></div>
+          <div><label for="dates">Preferred dates</label><input type="text" id="dates" placeholder="e.g. Dec 15 – Jan 5"></div>
+        </div>
+      </fieldset>
+    </div>
+
+    <!-- Co-buy -->
+    <div class="panel dark stack" id="cobuyPanel">
+      <h3 class="serif gold">Generational Wealth & Co-Buying</h3>
+      <p>This trip has a dual purpose: a vacation, and a due-diligence tour of real estate the family could acquire together through a Family LLC.</p>
+      <div class="inset">
+        <h4 class="gold">How it would work</h4>
+        <ul>
+          <li>Participating households fund an LLC. The LLC seeks a commercial or portfolio loan for the asset.</li>
+          <li>The property serves as a private family retreat and an international short-term rental.</li>
+          <li>Rental income services the debt and funds management (staff, maintenance).</li>
+        </ul>
+        <p class="small muted-light">Nothing here is legal, tax, or investment advice. Structure, jurisdiction, and lending terms get reviewed with a licensed professional before any commitment.</p>
+      </div>
+      <fieldset id="cobuyFields" class="stack">
+        <label class="check"><input type="checkbox" id="cobuyInterest"><span>My household is interested in exploring co-ownership.</span></label>
+        <div id="cobuyQuestions" class="hidden stack indent">
+          <div><label for="cobuyCapital">Estimated capital contribution range</label><input type="text" id="cobuyCapital" placeholder="e.g. $50k – $100k"></div>
+          <div><label for="cobuyBorrow">Open to being a co-borrower on a joint loan?</label>
+            <select id="cobuyBorrow"><option value="">—</option><option>Yes</option><option>Maybe</option><option>No</option></select></div>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="center" id="saveRow">
+      <button id="saveLogistics" class="btn primary">Save Logistics & Co-Buy Answers</button>
+      <span id="saveMsg" class="small muted"></span>
+    </div>
+
+    <!-- Properties -->
+    <div class="stack">
+      <h3 class="serif underline">Global Target Properties</h3>
+      <p class="muted">Review the assets. Vote for every trip you'd take — votes are per person and the party's tally shows on each card.</p>
+      <p id="lockedBanner" class="banner hidden">Votes are locked for this party.</p>
+      <div id="propertyGrid" class="grid3"></div>
+    </div>
+
+    <div class="center lock-row" id="lockRow">
+      <button id="lockVotes" class="btn gold big">Lock Party Votes</button>
+      <p class="small muted">Head of Household only. Locking freezes every member's votes — do this once everyone has voted.</p>
+    </div>
+  </section>
+</main>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

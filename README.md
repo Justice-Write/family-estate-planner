@@ -1,0 +1,51 @@
+# Family Estate & Trip Planner
+
+Static site (no build step) + Supabase. Everything in `public/` is the deployable.
+
+## Stack
+- `public/index.html`, `styles.css`, `app.js` — plain HTML/CSS/ES modules, no framework, no Tailwind CDN.
+- `public/vendor/supabase.js` — supabase-js v2.117.2 bundled locally (esbuild). No runtime CDN dependency.
+- Supabase project **Terradex** (`zhusbmnyjkzrteliulli`, us-west-2). Tables are `trip_*` so they sit cleanly beside the Terradex tables.
+  (A dedicated project was blocked: the free tier's 2-active-project limit is already used.)
+- Publishable key is in `app.js` — that's by design; RLS is the security boundary.
+
+## The rules (who can do what)
+Enforced in Postgres by RLS — the front end only reflects them. Full SQL: `supabase/migrations/20260928_trip_planner.sql`.
+
+| Actor | Can | Cannot |
+|---|---|---|
+| Anyone signed in | Read the property list | See any party, roster, budget, or vote that isn't theirs |
+| Any user | Create ONE party (becomes Head) **or** join ONE party by code — never both, never two | Create/join directly via table insert (only via `trip_create_party` / `trip_join_party` RPCs) |
+| Head of Household | Edit budget, dates, headcount, member details, co-buy answers; lock votes | Edit another party; unlock votes (SQL editor only) |
+| Secondary member | Read their party's logistics; cast/remove their own votes; see the party tally | Edit logistics; vote as someone else; change votes after lock |
+| Head, after lock | Still edit logistics | Change any votes (the lock applies to the head too) |
+| Properties | — | Anyone. Add/edit rows only from the Supabase SQL editor or service role |
+
+Party codes are `SURNAME-####` (random 4 digits), case-insensitive on join.
+
+Verified against the live database with a 16-check RLS test (head/member/outsider, pre- and post-lock): all pass.
+
+## Deploy — Cloudflare Pages (free)
+**Direct upload (fastest):** Cloudflare dashboard → Workers & Pages → Create → Pages → Upload assets → drag the `public/` folder. Done; you get `*.pages.dev`.
+
+**CLI:** `npx wrangler pages deploy public --project-name family-estate-planner` (needs `CLOUDFLARE_API_TOKEN` with *Cloudflare Pages: Edit*).
+
+## Supabase settings to check once (dashboard → Authentication)
+1. **Email confirmations** — default ON. For a family app, turn it OFF (Providers → Email → "Confirm email") so people can log in immediately. The app handles both cases.
+2. **Site URL** — set to your `*.pages.dev` URL so any auth emails link back correctly.
+
+## Adding properties
+```sql
+insert into public.trip_properties (id, name, location, status, details, risk, risk_level, sort) values
+('craigston-castle', 'Craigston Castle', 'Aberdeenshire, Scotland', 'rental',
+  array['detail 1','detail 2'], 'Risk text.', 'medium', 50);
+```
+`status` is `rental` or `sale`; `risk_level` is `low|medium|high`; set `active=false` to hide a card.
+
+## Unlocking a party's votes
+```sql
+update public.trip_parties set votes_locked = false where code = 'SMITH-1234';
+```
+
+## Changelog
+- 2026-09-28 — Initial build. Schema + RLS migration applied to Terradex. Front end rewritten from the Firebase stub: Supabase auth, create/join party via RPC, head-only logistics + co-buy persistence, per-user votes with party tally, head-only vote lock, party size up to 12 (was capped at 6). Craigston / Tuscan Villa cards from the stub's TODO not seeded — no data supplied.
