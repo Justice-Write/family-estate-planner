@@ -5,8 +5,7 @@ Static site (no build step) + Supabase. Everything in `public/` is the deployabl
 ## Stack
 - `public/index.html`, `styles.css`, `app.js` — plain HTML/CSS/ES modules, no framework, no Tailwind CDN.
 - `public/vendor/supabase.js` — supabase-js v2.117.2 bundled locally (esbuild). No runtime CDN dependency.
-- Supabase project **Terradex** (`zhusbmnyjkzrteliulli`, us-west-2). Tables are `trip_*` so they sit cleanly beside the Terradex tables.
-  (A dedicated project was blocked: the free tier's 2-active-project limit is already used.)
+- Supabase project **Family Estate Planner - Free** (`fdlzvjdseljajjkdmdbv`, us-east-2, org Castleborn - Free). Tables are `trip_*`.
 - Publishable key is in `app.js` — that's by design; RLS is the security boundary.
 
 ## The rules (who can do what)
@@ -48,4 +47,5 @@ update public.trip_parties set votes_locked = false where code = 'SMITH-1234';
 ```
 
 ## Changelog
+- 2026-09-29 — Moved to dedicated Supabase project fdlzvjdseljajjkdmdbv (schema re-applied via SQL editor, email confirmation off). Deployed to Cloudflare Pages (Git-connected). Terradex tables dropped.
 - 2026-09-28 — Initial build. Schema + RLS migration applied to Terradex. Front end rewritten from the Firebase stub: Supabase auth, create/join party via RPC, head-only logistics + co-buy persistence, per-user votes with party tally, head-only vote lock, party size up to 12 (was capped at 6). Craigston / Tuscan Villa cards from the stub's TODO not seeded — no data supplied.

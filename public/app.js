@@ -1,8 +1,8 @@
 // supabase-js v2.117.2, bundled locally (public/vendor/supabase.js) — no CDN dependency
 import { createClient } from './vendor/supabase.js';
 
-const SUPABASE_URL = 'https://zhusbmnyjkzrteliulli.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_i60BorifsJwYbj4f4xay2w_RUfMChSu';
+const SUPABASE_URL = 'https://fdlzvjdseljajjkdmdbv.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_cxiQDJcEuavGrefWGKVFMg_8gV0CNth';
 const MAX_PARTY = 12;
 
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
