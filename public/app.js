@@ -275,6 +275,7 @@ window.openPropertyModal = (id) => {
   $('modal-location').innerHTML = `<i class="fas fa-map-marker-alt mr-1"></i> ${esc(prop.location)}`;
   $('modal-image').src = prop.image || '';
   $('modal-description').textContent = prop.full_desc || '';
+  $('modal-extras')?.remove();
   $('modal-tags').innerHTML = `
     <span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-semibold"><i class="fas fa-users text-brand-gold mr-1"></i> ${esc(prop.capacity)}</span>
     <span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-semibold"><i class="fas fa-tree text-brand-gold mr-1"></i> ${esc(prop.acreage)}</span>
@@ -284,6 +285,9 @@ window.openPropertyModal = (id) => {
     <div class="flex justify-between items-center pb-3 border-b border-gray-100/50"><span class="text-sm text-gray-600">Rental / Trial Stay</span><span class="font-bold text-brand-navy">${esc(prop.rental_cost)}</span></div>
     <div class="flex justify-between items-center pb-3 border-b border-gray-100/50"><span class="text-sm text-gray-600">Acquisition Price</span><span class="font-bold ${isBuyTarget(prop) ? 'text-green-700' : 'text-gray-500'}">${esc(prop.buy_cost)}</span></div>
     <div class="flex justify-between items-center pb-3 border-b border-gray-100/50"><span class="text-sm text-gray-600">Party votes</span><span class="font-bold text-brand-navy">${tally(prop.id)}</span></div>`;
+  const link = prop.listing_url ? `<a href="${esc(prop.listing_url)}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-sm font-semibold text-brand-navy underline decoration-brand-gold underline-offset-4 hover:text-brand-gold"><i class="fas fa-external-link-alt text-brand-gold"></i> View original listing</a>` : '';
+  const gal = (prop.gallery || []).slice(0, 6).map(u => `<img src="${esc(u)}" class="h-20 w-full object-cover rounded-lg border border-gray-100 cursor-pointer" onclick="document.getElementById('modal-image').src=this.src">`).join('');
+  $('modal-description').insertAdjacentHTML('afterend', `<div id="modal-extras" class="space-y-3">${gal ? `<div class="grid grid-cols-3 sm:grid-cols-6 gap-2">${gal}</div>` : ''}${link}</div>`);
   const wc = $('modal-warning-container');
   if (prop.risk) { $('modal-warning-text').textContent = prop.risk; wc.classList.remove('hidden'); } else wc.classList.add('hidden');
   updateModalVoteButtonState();
