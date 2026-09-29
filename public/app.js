@@ -242,10 +242,11 @@ function renderPropertiesGrid() {
   const grid = $('estates-grid');
   grid.innerHTML = state.properties.map(prop => {
     const voted = myVote(prop.id), n = tally(prop.id);
+    const hero = prop.image || (prop.gallery || [])[0] || '';
     return `
       <div class="property-card glass-card rounded-2xl overflow-hidden cursor-pointer flex flex-col h-full ${voted ? 'property-voted' : ''}" onclick="openPropertyModal('${prop.id}')" id="card-${prop.id}">
         <div class="h-44 relative overflow-hidden bg-gray-200">
-          <img src="${esc(prop.image || '')}" alt="${esc(prop.name)}" class="w-full h-full object-cover transition-transform duration-500 hover:scale-110">
+          ${hero ? `<img src="${esc(hero)}" alt="${esc(prop.name)}" class="w-full h-full object-cover transition-transform duration-500 hover:scale-110">` : `<div class="w-full h-full flex items-center justify-center text-gray-400 text-sm"><i class="fas fa-image mr-2"></i>No photo yet</div>`}
           <div class="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider shadow-sm text-brand-navy">
             ${isBuyTarget(prop) ? '<i class="fas fa-key text-brand-gold mr-1"></i> Buy Target' : 'Rental Only'}
           </div>
@@ -273,7 +274,7 @@ window.openPropertyModal = (id) => {
   currentModalPropertyId = id;
   $('modal-title').textContent = prop.name;
   $('modal-location').innerHTML = `<i class="fas fa-map-marker-alt mr-1"></i> ${esc(prop.location)}`;
-  $('modal-image').src = prop.image || '';
+  $('modal-image').src = prop.image || (prop.gallery || [])[0] || '';
   $('modal-description').textContent = prop.full_desc || '';
   $('modal-extras')?.remove();
   $('modal-tags').innerHTML = `
