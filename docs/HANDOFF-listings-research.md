@@ -10,6 +10,8 @@
 
 Two tracks. Every listing must be tagged as one or the other (`status`).
 
+**Source diversity:** the first pass drew 8 of 11 rentals from one agency (Celtic Castles). This round, no single agency may supply more than a third of the rentals. Use owner sites, national heritage-stay agencies (e.g. Landmark Trust-type bodies), Kid & Coe / Plum Guide / Oliver's Travels-class platforms, and direct-booking castle sites.
+
 ### Track A — `rental`: the trip itself
 An exclusive-use property for one family gathering in the **Dec 15 – Jan 5** window.
 - Sleeps **12 minimum**; **up to 50** is a bonus (extended family may come).
@@ -17,11 +19,11 @@ An exclusive-use property for one family gathering in the **Dec 15 – Jan 5** w
 - Exclusive use of the whole property. No shared-hotel arrangements.
 - Character that justifies the flight: castle, manor, estate, historic villa, heritage farmhouse. Ordinary vacation rentals don't qualify.
 - Nightly price band to cover: roughly **$900 – $6,000/night**. Include at least two under $1,500/night.
-- Regions in play: Scotland, Ireland, England/Wales, France, Italy, Spain/Portugal, Japan. Others welcome if they clearly fit.
+- Regions in play: Scotland, Ireland, England/Wales, France, Italy, Spain/Portugal, Japan, plus Croatia, Greece, Austria/Germany, Morocco, Mexico, Costa Rica. Others welcome if they clearly fit.
 
 ### Track B — `sale`: the generational asset
 A property the family could buy through a jointly owned LLC (≈5 households pooling capital), first tested with a paid "due-diligence" stay.
-- Asking price **under ~$1.1M USD**. Anything from $150k up is interesting; cheaper is not worse.
+- **No price ceiling.** Include the full range from ~$150k rescue projects to multi-million estates; the family wants to see what capital buys at each tier. State the asking price plainly and, above ~$1.5M, add one sentence on what a 5-household LLC would need per household (asking ÷ 5, before financing).
 - Must be **bookable to stay in now** (or the seller/broker will arrange a trial stay) — a listing you can't visit is useless for this trip.
 - Enough beds/outbuildings for family weeks **plus** surplus to rent out: ≥8 bedrooms or main house + cottages/gîtes.
 - Rental income potential: note comparable nightly rates for similar properties in the area.
@@ -31,7 +33,8 @@ A property the family could buy through a jointly owned LLC (≈5 households poo
 - `short_desc`: one line, ≤ 70 chars, the hook. ("Authentic medieval self-catering castle.")
 - `full_desc`: 2–4 sentences, concrete. Beds, what's on the grounds, what's included, what the stay is like. No brochure adjectives without a fact behind them.
 - `risk`: 1–2 sentences, specific, worst thing first. Leave `null` only if you looked and found nothing material.
-- Prices: give the listed figure in its currency **and** an approximate USD in parentheses. Say "Est." when you're estimating. Say "Off-Market" for rentals that aren't for sale.
+- Prices: give the listed figure in its currency **and** an approximate USD in parentheses in the text fields. Say "Est." when you're estimating. Say "Off-Market" for rentals that aren't for sale.
+- **Structured prices are now required** so the site can convert currencies live: `rental_amount` (number), `rental_currency` (ISO 4217, e.g. `EUR`), `rental_unit` (`night`, `week`, `3 nights`, `room-night`…), `buy_amount`, `buy_currency`. Use the headline listed price, not your USD conversion. Leave null when there is no real figure ("price on application").
 
 ---
 
@@ -51,7 +54,8 @@ One file, `listings-YYYY-MM-DD.sql`, containing one `insert … on conflict do u
 ```sql
 insert into public.trip_properties
   (id, name, location, status, sort, image, gallery, listing_url,
-   short_desc, full_desc, rental_cost, buy_cost, capacity, acreage, amenities, risk, risk_level, active)
+   short_desc, full_desc, rental_cost, buy_cost, capacity, acreage, amenities, risk, risk_level, active,
+   rental_amount, rental_currency, rental_unit, buy_amount, buy_currency)
 values
 ('slug-in-kebab-case', 'Display Name', 'Region, Country', 'rental', 80,
   'https://…/hero.jpg',
@@ -66,14 +70,18 @@ values
   array['Amenity one','Amenity two','Amenity three'],
   'Specific risk sentence, or null.',  -- risk
   'medium',                            -- risk_level: low | medium | high
-  true)
+  true,
+  1900, 'GBP', 'night',                -- rental_amount, rental_currency, rental_unit
+  null, null)                          -- buy_amount, buy_currency (asking price for status = sale)
 on conflict (id) do update set
   name = excluded.name, location = excluded.location, status = excluded.status, sort = excluded.sort,
   image = excluded.image, gallery = excluded.gallery, listing_url = excluded.listing_url,
   short_desc = excluded.short_desc, full_desc = excluded.full_desc,
   rental_cost = excluded.rental_cost, buy_cost = excluded.buy_cost, capacity = excluded.capacity,
   acreage = excluded.acreage, amenities = excluded.amenities, risk = excluded.risk,
-  risk_level = excluded.risk_level, active = excluded.active;
+  risk_level = excluded.risk_level, active = excluded.active,
+  rental_amount = excluded.rental_amount, rental_currency = excluded.rental_currency, rental_unit = excluded.rental_unit,
+  buy_amount = excluded.buy_amount, buy_currency = excluded.buy_currency;
 ```
 
 Rules for the file:
@@ -85,8 +93,13 @@ Rules for the file:
 - `details` column exists but is legacy; omit it.
 
 ### Existing ids (update these rather than duplicating)
-| id | name | status |
-|---|---|---|
+Active rentals: `craigston-castle`, `springkell-estate`, `bansha-castle`, `dairsie-castle`, `chateau-de-sadillac`, `borgo-santa-maria`, `villa-bramasole-cortona`, `lickleyhead-castle`, `springfield-castle`, `cloughan-castle`, `belle-isle-castle`.
+Active sale leads: `casa-campana-arcos`, `posada-los-cantaros`, `ptitmonde-vosges`.
+Inactive (keep rows; reactivate only with new evidence): `turin-castle`, `auchen-castle`, `deux-sevres-chateau`, `tuscan-villa`, `nagano-kominka`.
+
+The 2026-09-29 pass is in `supabase/data/listings-2026-09-29.sql` — read it first; it is the baseline you are updating.
+
+---|---|---|
 | `turin-castle` | Turin Castle, Co. Mayo | rental |
 | `craigston-castle` | Craigston Castle, Aberdeenshire | rental |
 | `springkell-estate` | Springkell Estate, Dumfriesshire | rental |
@@ -115,8 +128,9 @@ Treat each as a candidate to research and either add (with a real id) or reject 
 
 ---
 
-## 6. Targets for the first pass
-- Verify/replace all 7 existing cards (images, prices, availability).
-- Add **4–6 rentals** across at least three countries, two of them under $1,500/night.
-- Add **3–4 sale targets** under $1.1M with a trial-stay path.
-- Total on the site after your pass: 14–17 cards. More than ~20 makes the vote meaningless — curate.
+## 6. Targets for this pass (2026-09-29 round two: price cap lifted)
+- Re-verify the 14 active cards' prices and availability; refresh any changed image URLs.
+- Add **6–8 sale targets with no price ceiling** — spread across tiers: 2 under $500k, 2–3 in $1–3M, 2–3 above $3M (true estates: castle, chateau, hacienda, ryokan). Each must have a stay path (bookable now, or broker-arranged trial stay).
+- Add **3–4 rentals from agencies other than Celtic Castles**, at least two outside the UK/Ireland.
+- Total after your pass: 24–28 active cards. Group `sort` so rentals stay 10–199 and sales 200–399, ordered cheapest first within sales.
+- Deliver as before: one `listings-YYYY-MM-DD.sql` plus `notes-YYYY-MM-DD.md`, in a self-contained handoff document with the file's SHA-256 and verification SQL — the format you used last time worked well.

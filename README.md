@@ -9,11 +9,12 @@ Static site (no build step) + Supabase. Everything in `public/` is the deployabl
 - Publishable key is in `app.js` — that's by design; RLS is the security boundary.
 
 ## The rules (who can do what)
-Enforced in Postgres by RLS — the front end only reflects them. Full SQL: `supabase/migrations/20260928_trip_planner.sql` → `20260929_v2_full_design.sql` → `20260929_v3_listing_url.sql`.
+Enforced in Postgres by RLS — the front end only reflects them. Full SQL: `supabase/migrations/20260928_trip_planner.sql` → `20260929_v2_full_design.sql` → `20260929_v3_listing_url.sql` → `20260929_v4_groups_prices.sql`.
 
 | Actor | Can | Cannot |
 |---|---|---|
-| Anyone signed in | Read the property list | See any party, roster, budget, or vote that isn't theirs |
+| Anyone signed in | Join ONE circle by invite code or create one (becomes circle owner) | Be in two circles |
+| Circle member | Read the shared catalog + their circle's private listings; see circle-wide vote tallies; pick a party in their circle | See other circles' parties, votes, or suggestions |
 | Any user | Create ONE party (becomes Head) **or** join ONE party by code — never both, never two | Create/join directly via table insert (only via `trip_create_party` / `trip_join_party` RPCs) |
 | Head of Household | Edit budget, dates, headcount, member details, co-buy answers; lock votes | Edit another party; unlock votes (SQL editor only) |
 | Secondary member | Cast/remove their own votes; see the party tally; save a suggestion link | See or edit logistics; vote as someone else; change votes after lock |
@@ -33,6 +34,16 @@ Verified against the live database with a 16-check RLS test (head/member/outside
 1. **Email confirmations** — default ON. For a family app, turn it OFF (Providers → Email → "Confirm email") so people can log in immediately. The app handles both cases.
 2. **Site URL** — set to your `*.pages.dev` URL so any auth emails link back correctly.
 
+## Circles (groups)
+Each extended family / friend group is a **circle** with an invite code. Parties, votes, suggestions and the party dropdown are all scoped to the circle. Listings with `group_id = null` are the shared catalog every circle sees; a row with `group_id` set is private to that circle. Christian's existing data was migrated into the circle **"Christian's Family"**. Rename: `update trip_groups set name = '…' where code = 'FAMILY-1204';`
+
+## Currency
+Header dropdown converts every structured price (`rental_amount`/`rental_currency`/`rental_unit`, `buy_amount`/`buy_currency`) into the chosen currency using live ECB rates from api.frankfurter.dev (falls back to the research payload's planning rates for EUR/GBP). Choice is saved to the user's auth metadata + localStorage. Unstructured prices show their raw text.
+
+## Automation (GitHub Actions)
+- `listing-health.yml` — weekly HEAD-check of every hero/gallery/listing URL on active cards; opens or updates an issue labelled `listing-health` on failures. Needs repo secret `SUPABASE_SERVICE_ROLE_KEY`.
+- `listing-research.yml` — monthly Perplexity Sonar run of the handoff brief; writes `supabase/data/candidates-DATE.sql` and opens a PR for review. Never auto-applies. Needs secret `PERPLEXITY_API_KEY` and repo variable `PPLX_MODEL` (current deep-research model name from Perplexity's docs).
+
 ## Updating listings (the research loop)
 Hand `docs/HANDOFF-listings-research.md` to a research agent (Perplexity Computer). It returns one `listings-DATE.sql`; paste it into the Supabase SQL editor. Read family suggestions first with `select * from public.trip_list_suggestions();` and paste the output into the brief.
 
@@ -50,6 +61,7 @@ update public.trip_parties set votes_locked = false where code = 'SMITH-1234';
 ```
 
 ## Changelog
+- 2026-09-29 (v4) — Circles (groups) with invite codes; all party/vote/suggestion queries scoped per circle; circle-wide tally RPC. Structured prices + header currency selector with live ECB rates. Weekly link-health and monthly research-refresh workflows. Research brief round two: price cap lifted, source diversity rule, structured price fields required.
 - 2026-09-29 (v3) — `listing_url` + `gallery` on properties (modal shows thumbnails + "View original listing"); `trip_list_suggestions()` feed; research handoff doc in `docs/`.
 - 2026-09-29 (v2) — Ported the full original design: 7 estates with Zillow-style modal, name-based identity (auth metadata), join-by-dropdown, ± party size (max 20), multiple date ranges (jsonb), capital + income questions, suggestion box. Votes save instantly; party tally on each card.
 - 2026-09-29 — Moved to dedicated Supabase project fdlzvjdseljajjkdmdbv (schema re-applied via SQL editor, email confirmation off). Deployed to Cloudflare Pages (Git-connected). Terradex tables dropped.

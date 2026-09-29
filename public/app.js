@@ -12,8 +12,9 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&
 
 const state = {
   user: null, name: '',
-  party: null, isLeader: false,
-  members: [], properties: [], votes: [], suggestion: '',
+  group: null, party: null, isLeader: false,
+  members: [], properties: [], votes: [], tally: {}, suggestion: '',
+  currency: 'USD', rates: null,
 };
 let currentModalPropertyId = null;
 let dateCount = 0;
@@ -33,6 +34,9 @@ const hideLoading = () => $('loading-screen').classList.add('hidden');
 const friendly = (m) => /invalid login credentials/i.test(m) ? 'Wrong password for that email.'
   : /already in a party/i.test(m) ? 'This account is already in a party.'
   : /party not found/i.test(m) ? 'That party no longer exists.'
+  : /already in a group/i.test(m) ? 'This account is already in a circle.'
+  : /group not found/i.test(m) ? 'No circle with that invite code.'
+  : /join a group first/i.test(m) ? 'Join or create a circle first.'
   : /rate limit/i.test(m) ? 'Too many attempts — wait a minute and try again.' : m;
 
 // ── Auth ────────────────────────────────────────────────────────────────────
@@ -62,15 +66,44 @@ sb.auth.onAuthStateChange(async (_evt, session) => {
   state.user = session?.user ?? null;
   if (!state.user) {
     $('main-app').classList.add('hidden'); $('main-app').classList.remove('flex');
-    $('party-modal').classList.add('hidden');
+    $('party-modal').classList.add('hidden'); $('group-modal').classList.add('hidden');
     hideLoading(); $('auth-modal').classList.remove('hidden');
     return;
   }
   $('auth-modal').classList.add('hidden');
   state.name = state.user.user_metadata?.name || state.user.email;
+  state.currency = state.user.user_metadata?.currency || (() => { try { return localStorage.getItem('currency'); } catch { return null; } })() || 'USD';
+  $('currency-select').value = state.currency;
   showLoading('Checking family roster...');
-  await loadParty();
+  await loadGroup();
 });
+
+// ── Group (circle) ──────────────────────────────────────────────────────────
+async function loadGroup() {
+  const { data: group, error } = await sb.from('trip_groups').select('*').maybeSingle();
+  if (error) { hideLoading(); return showToast(error.message, 'error'); }
+  if (!group) { hideLoading(); $('party-modal').classList.add('hidden'); $('group-modal').classList.remove('hidden'); return; }
+  state.group = group;
+  $('group-modal').classList.add('hidden');
+  await loadParty();
+}
+window.joinGroup = async () => {
+  const code = $('group-code-input').value.trim();
+  if (!code) return showToast('Enter the invite code.', 'error');
+  const { error } = await sb.rpc('trip_join_group', { p_code: code });
+  if (error) return showToast(friendly(error.message), 'error');
+  showLoading('Joining circle...'); await loadGroup();
+};
+window.createGroup = async () => {
+  const name = $('new-group-name').value.trim();
+  if (!name) return showToast('Give your circle a name.', 'error');
+  const { error } = await sb.rpc('trip_create_group', { p_name: name });
+  if (error) return showToast(friendly(error.message), 'error');
+  showLoading('Creating circle...'); await loadGroup();
+};
+window.copyGroupCode = async () => {
+  try { await navigator.clipboard.writeText(state.group.code); showToast('Invite code copied.'); } catch { showToast(state.group.code); }
+};
 
 // ── Party ───────────────────────────────────────────────────────────────────
 async function loadParty() {
@@ -79,7 +112,7 @@ async function loadParty() {
   if (!party) { hideLoading(); await loadExistingParties(); $('party-modal').classList.remove('hidden'); return; }
   state.party = party; state.isLeader = party.head_user_id === state.user.id;
   setLoadingText('Loading estates...');
-  await Promise.all([loadMembers(), loadProperties(), loadVotes(), loadSuggestion()]);
+  await Promise.all([loadMembers(), loadProperties(), loadVotes(), loadTally(), loadSuggestion(), loadRates()]);
   $('party-modal').classList.add('hidden');
   showApp();
 }
@@ -112,6 +145,8 @@ function showApp() {
   hideLoading();
   $('display-user-name').textContent = state.name;
   $('display-party-role').textContent = (state.isLeader ? 'Head of ' : 'Member of ') + state.party.name;
+  $('display-group-name').textContent = state.group.name;
+  $('group-code').textContent = state.group.code;
   if (state.isLeader) {
     $('logistics-section').classList.remove('hidden-section');
     $('display-party-name').textContent = state.party.name;
@@ -233,10 +268,47 @@ $('logistics-form').addEventListener('submit', async (e) => {
   }
 });
 
+// ── Currency ────────────────────────────────────────────────────────────────
+// Rates are USD-based: rates[X] = how many X per 1 USD. Fallback = the research payload's planning conversions.
+const FALLBACK_RATES = { USD: 1, EUR: 1 / 1.16, GBP: 1 / 1.33 };
+async function loadRates() {
+  try {
+    const r = await fetch('https://api.frankfurter.dev/v1/latest?base=USD&symbols=EUR,GBP,CAD,AUD,JPY,CHF,MXN', { cache: 'no-store' });
+    if (!r.ok) throw new Error(r.status);
+    const j = await r.json(); state.rates = { USD: 1, ...j.rates }; state.ratesDate = j.date;
+  } catch { state.rates = FALLBACK_RATES; state.ratesDate = null; }
+}
+const SYM = { USD: '$', EUR: '€', GBP: '£', CAD: 'CA$', AUD: 'A$', JPY: '¥', CHF: 'CHF ', MXN: 'MX$' };
+function convert(amount, from, to) {
+  const r = state.rates || FALLBACK_RATES;
+  if (!(from in r) || !(to in r)) return null;
+  return amount / r[from] * r[to];
+}
+function money(amount, cur) {
+  const digits = cur === 'JPY' ? 0 : (amount >= 1000 ? 0 : 2);
+  return (SYM[cur] ?? cur + ' ') + amount.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+}
+// Structured price → "≈ £2,960 / week (€3,500)"; falls back to the raw text when unstructured.
+function priceLine(amount, cur, unit, rawText) {
+  if (amount == null || !cur) return esc(rawText || '—');
+  const unitTxt = unit ? ` / ${esc(unit)}` : '';
+  if (cur === state.currency) return `${money(amount, cur)}${unitTxt}`;
+  const c = convert(amount, cur, state.currency);
+  if (c == null) return `${money(amount, cur)}${unitTxt}`;
+  return `<span class="whitespace-nowrap">≈ ${money(c, state.currency)}${unitTxt}</span> <span class="text-gray-400 font-normal text-xs">(${money(amount, cur)})</span>`;
+}
+$('currency-select').addEventListener('change', async (e) => {
+  state.currency = e.target.value;
+  try { localStorage.setItem('currency', state.currency); } catch {}
+  renderPropertiesGrid();
+  if (currentModalPropertyId && !$('property-modal').classList.contains('hidden')) openPropertyModal(currentModalPropertyId);
+  if (state.user) sb.auth.updateUser({ data: { currency: state.currency } });
+});
+
 // ── Estates & votes ─────────────────────────────────────────────────────────
 const isBuyTarget = (p) => p.status === 'sale';
 const myVote = (id) => state.votes.some(v => v.property_id === id && v.user_id === state.user.id);
-const tally = (id) => state.votes.filter(v => v.property_id === id).length;
+const tally = (id) => state.tally[id] || 0;
 
 function renderPropertiesGrid() {
   const grid = $('estates-grid');
@@ -262,7 +334,10 @@ function renderPropertiesGrid() {
             <div><span class="block text-[10px] uppercase text-gray-400 font-semibold">Acreage</span>
               <span class="text-sm font-medium text-brand-navy"><i class="fas fa-tree mr-1 text-gray-400 text-xs"></i>${esc(prop.acreage)}</span></div>
           </div>
-          <div class="mt-3 text-[11px] text-gray-500"><i class="fas fa-poll text-brand-gold mr-1"></i>${n} party vote${n === 1 ? '' : 's'}</div>
+          <div class="mt-3 flex items-center justify-between text-[11px] text-gray-500">
+            <span class="font-semibold text-brand-navy">${priceLine(prop.rental_amount, prop.rental_currency, prop.rental_unit, prop.rental_cost)}</span>
+            <span><i class="fas fa-poll text-brand-gold mr-1"></i>${n} circle vote${n === 1 ? '' : 's'}</span>
+          </div>
         </div>
       </div>`;
   }).join('');
@@ -283,9 +358,10 @@ window.openPropertyModal = (id) => {
     <span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-semibold"><i class="fas fa-home text-brand-gold mr-1"></i> ${isBuyTarget(prop) ? 'Acquisition Target' : 'Vacation Rental'}</span>`;
   $('modal-amenities').innerHTML = (prop.amenities || []).map(a => `<li class="flex items-center gap-2"><i class="fas fa-check text-brand-gold text-xs"></i> ${esc(a)}</li>`).join('');
   $('modal-financials').innerHTML = `
-    <div class="flex justify-between items-center pb-3 border-b border-gray-100/50"><span class="text-sm text-gray-600">Rental / Trial Stay</span><span class="font-bold text-brand-navy">${esc(prop.rental_cost)}</span></div>
-    <div class="flex justify-between items-center pb-3 border-b border-gray-100/50"><span class="text-sm text-gray-600">Acquisition Price</span><span class="font-bold ${isBuyTarget(prop) ? 'text-green-700' : 'text-gray-500'}">${esc(prop.buy_cost)}</span></div>
-    <div class="flex justify-between items-center pb-3 border-b border-gray-100/50"><span class="text-sm text-gray-600">Party votes</span><span class="font-bold text-brand-navy">${tally(prop.id)}</span></div>`;
+    <div class="pb-3 border-b border-gray-100/50"><div class="text-sm text-gray-600">Rental / Trial Stay</div><div class="font-bold text-brand-navy text-right">${priceLine(prop.rental_amount, prop.rental_currency, prop.rental_unit, prop.rental_cost)}</div>${prop.rental_amount != null ? `<div class="text-[11px] text-gray-400 mt-1">${esc(prop.rental_cost)}</div>` : ''}</div>
+    <div class="pb-3 border-b border-gray-100/50"><div class="text-sm text-gray-600">Acquisition Price</div><div class="font-bold text-right ${isBuyTarget(prop) ? 'text-green-700' : 'text-gray-500'}">${priceLine(prop.buy_amount, prop.buy_currency, '', prop.buy_cost)}</div>${prop.buy_amount != null && prop.buy_cost ? `<div class="text-[11px] text-gray-400 mt-1">${esc(prop.buy_cost)}</div>` : ''}</div>
+    <div class="flex justify-between items-center pb-3 border-b border-gray-100/50"><span class="text-sm text-gray-600">Circle votes</span><span class="font-bold text-brand-navy">${tally(prop.id)}</span></div>
+    ${state.ratesDate ? `<div class="text-[10px] text-gray-400">Rates: ECB ${esc(state.ratesDate)}</div>` : `<div class="text-[10px] text-gray-400">Rates: planning estimates (live rates unavailable)</div>`}`;
   const link = prop.listing_url ? `<a href="${esc(prop.listing_url)}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-sm font-semibold text-brand-navy underline decoration-brand-gold underline-offset-4 hover:text-brand-gold"><i class="fas fa-external-link-alt text-brand-gold"></i> View original listing</a>` : '';
   const gal = (prop.gallery || []).slice(0, 6).map(u => `<img src="${esc(u)}" class="h-20 w-full object-cover rounded-lg border border-gray-100 cursor-pointer" onclick="document.getElementById('modal-image').src=this.src">`).join('');
   $('modal-description').insertAdjacentHTML('afterend', `<div id="modal-extras" class="space-y-3">${gal ? `<div class="grid grid-cols-3 sm:grid-cols-6 gap-2">${gal}</div>` : ''}${link}</div>`);
@@ -312,9 +388,9 @@ window.toggleVoteCurrentProperty = async () => {
   btn.disabled = false;
   if (error) return showToast(/row-level security/i.test(error.message) ? 'Voting is locked for your party.' : error.message, 'error');
   showToast(had ? 'Vote removed.' : 'Property added to your votes!');
-  await loadVotes(); updateModalVoteButtonState(); renderPropertiesGrid();
-  const prop = state.properties.find(p => p.id === id);
-  if (prop) $('modal-financials').lastElementChild.lastElementChild.textContent = tally(id);
+  await Promise.all([loadVotes(), loadTally()]); updateModalVoteButtonState(); renderPropertiesGrid();
+  const cell = [...$('modal-financials').querySelectorAll('span')].find(s => s.previousElementSibling?.textContent === 'Circle votes');
+  if (cell) cell.textContent = tally(id);
 };
 
 function updateModalVoteButtonState() {
@@ -354,6 +430,10 @@ async function loadProperties() {
 async function loadVotes() {
   const { data } = await sb.from('trip_votes').select('user_id, property_id').eq('party_id', state.party.id);
   state.votes = data ?? [];
+}
+async function loadTally() {
+  const { data } = await sb.rpc('trip_group_tally');
+  state.tally = Object.fromEntries((data ?? []).map(r => [r.property_id, Number(r.votes)]));
 }
 async function loadSuggestion() {
   const { data } = await sb.from('trip_party_users').select('suggestion').eq('user_id', state.user.id).maybeSingle();
