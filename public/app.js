@@ -146,6 +146,8 @@ function showApp() {
   $('display-user-name').textContent = state.name;
   $('display-party-role').textContent = (state.isLeader ? 'Head of ' : 'Member of ') + state.party.name;
   $('display-group-name').textContent = state.group.name;
+  $('site-title').textContent = `${state.group.name} — Annual Trip`;
+  document.title = `${state.group.name} — Trip & Estate Scouting`;
   $('group-code').textContent = state.group.code;
   if (state.isLeader) {
     $('logistics-section').classList.remove('hidden-section');
