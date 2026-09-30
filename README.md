@@ -9,7 +9,7 @@ Static site (no build step) + Supabase. Everything in `public/` is the deployabl
 - Publishable key is in `app.js` — that's by design; RLS is the security boundary.
 
 ## The rules (who can do what)
-Enforced in Postgres by RLS — the front end only reflects them. Full SQL: `supabase/migrations/20260928_trip_planner.sql` → `20260929_v2_full_design.sql` → `20260929_v3_listing_url.sql` → `20260929_v4_groups_prices.sql` → `20260930_v5_admin.sql`.
+Enforced in Postgres by RLS — the front end only reflects them. Full SQL: `supabase/migrations/20260928_trip_planner.sql` → `20260929_v2_full_design.sql` → `20260929_v3_listing_url.sql` → `20260929_v4_groups_prices.sql` → `20260930_v5_admin.sql` → `20260930_v6_acquisition_toggle.sql`.
 
 | Actor | Can | Cannot |
 |---|---|---|
@@ -36,6 +36,9 @@ Verified against the live database with a 16-check RLS test (head/member/outside
 
 ## Admin console
 Admins are rows in `trip_admins` (Christian seeded). An **Admin** button appears in the header; it opens a console listing every circle → household → account, plus orphan accounts that never joined a circle. Actions (all server-side RPCs that check `trip_is_admin()`): move a person to any circle/household, merge a circle into another, merge a household into another (votes and roster carried over), rename, make head of household, lock/unlock votes, fix a display name, set a temporary password, delete a duplicate account, delete empty households/circles. Add another admin: `insert into trip_admins(user_id) select id from auth.users where email='…';`
+
+## Vacation-first by default; estate-purchase track is a switch
+`trip_groups.show_acquisition` (default **false**). Off: the site reads as a family-vacation planner — no LLC/syndicate copy, no investment questions, and `sale` listings are hidden by RLS (not just CSS). On: the "Master Plan" explainer, buy-target cards, acquisition prices and the capital/income questions appear. Toggle: checkbox in the circle bar (circle owner or admin) or the eye button per circle in the Admin console.
 
 ## Circles (groups)
 Each extended family / friend group is a **circle** with an invite code. Parties, votes, suggestions and the party dropdown are all scoped to the circle. Listings with `group_id = null` are the shared catalog every circle sees; a row with `group_id` set is private to that circle. Christian's existing data was migrated into the circle **"Christian's Family"**. Rename: `update trip_groups set name = '…' where code = 'FAMILY-1204';`
@@ -64,6 +67,7 @@ update public.trip_parties set votes_locked = false where code = 'SMITH-1234';
 ```
 
 ## Changelog
+- 2026-09-30 (v6) — Vacation-first default copy throughout; acquisition track behind a per-circle switch (`show_acquisition`, off by default) enforced in RLS for sale listings; friendly intro section; toggle in circle bar and admin console.
 - 2026-09-30 (v5) — Admin console: `trip_admins` + 12 admin RPCs (overview, move, merge circles/households, rename, set head, lock votes, set name, set temp password, delete account/household/circle). 14-check live test passed.
 - 2026-09-29 (v4) — Circles (groups) with invite codes; all party/vote/suggestion queries scoped per circle; circle-wide tally RPC. Structured prices + header currency selector with live ECB rates. Weekly link-health and monthly research-refresh workflows. Research brief round two: price cap lifted, source diversity rule, structured price fields required.
 - 2026-09-29 (v3) — `listing_url` + `gallery` on properties (modal shows thumbnails + "View original listing"); `trip_list_suggestions()` feed; research handoff doc in `docs/`.

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Christian's Annual Family Trip & Generational Wealth Scouting</title>
+    <title>Annual Family Trip Planner</title>
     <link rel="icon" href="data:,">
     
     <!-- Tailwind CSS -->
@@ -102,16 +102,16 @@
     <!-- Loading Screen -->
     <div id="loading-screen" class="fixed inset-0 z-50 bg-brand-light flex flex-col items-center justify-center">
         <div class="spinner mb-6"></div>
-        <h2 class="font-serif text-2xl text-brand-navy tracking-wide">Accessing Family Trust...</h2>
-        <p id="loading-text" class="text-gray-500 mt-2 text-sm">Authenticating connection</p>
+        <h2 class="font-serif text-2xl text-brand-navy tracking-wide">Opening the trip planner…</h2>
+        <p id="loading-text" class="text-gray-500 mt-2 text-sm">Signing you in</p>
     </div>
 
     <!-- Identity Modal -->
     <div id="auth-modal" class="hidden fixed inset-0 z-40 bg-brand-navy/95 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="glass-card p-10 rounded-2xl max-w-md w-full shadow-2xl text-center">
-            <i class="fas fa-gem text-4xl text-brand-gold mb-4"></i>
-            <h2 class="font-serif text-3xl font-semibold mb-2 text-brand-navy">Family Syndicate</h2>
-            <p class="text-gray-500 mb-8 text-sm">Sign in to access the scouting portal. First time here? The same button creates your account.</p>
+            <i class="fas fa-suitcase-rolling text-4xl text-brand-gold mb-4"></i>
+            <h2 class="font-serif text-3xl font-semibold mb-2 text-brand-navy">Family Trip Planner</h2>
+            <p class="text-gray-500 mb-8 text-sm">Sign in to help plan the trip. First time here? The same button creates your account.</p>
             <form id="auth-form" class="text-left space-y-4">
                 <div>
                     <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Your Full Name</label>
@@ -163,30 +163,30 @@
         <div class="glass-card p-8 md:p-10 rounded-2xl max-w-2xl w-full shadow-2xl my-8">
             <div class="text-center mb-8">
                 <i class="fas fa-users text-4xl text-brand-gold mb-4"></i>
-                <h2 class="font-serif text-3xl font-semibold mb-2 text-brand-navy">Household Assignment</h2>
-                <p class="text-gray-500 text-sm">To avoid duplicate headcount and budget entries, please let us know if you are leading a new party or joining an existing one.</p>
+                <h2 class="font-serif text-3xl font-semibold mb-2 text-brand-navy">Which household are you with?</h2>
+                <p class="text-gray-500 text-sm">So we count everyone once: are you setting up your household, or joining one someone already set up?</p>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Join Existing -->
                 <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
-                    <h3 class="font-bold text-brand-navy mb-2"><i class="fas fa-user-plus text-brand-gold mr-2"></i>Join Existing Party</h3>
-                    <p class="text-xs text-gray-500 mb-4">Someone else has already filled out the logistics for my group (e.g., my spouse or parent).</p>
+                    <h3 class="font-bold text-brand-navy mb-2"><i class="fas fa-user-plus text-brand-gold mr-2"></i>Join my household</h3>
+                    <p class="text-xs text-gray-500 mb-4">Someone in my household (spouse, parent) already set us up.</p>
                     <select id="existing-parties-dropdown" class="w-full px-4 py-3 mb-4 bg-white border border-gray-300 rounded-lg text-sm focus:border-brand-gold outline-none">
                         <option value="">Loading parties...</option>
                     </select>
                     <button onclick="joinParty()" class="w-full bg-white border-2 border-brand-navy text-brand-navy py-2.5 rounded-lg font-bold hover:bg-brand-navy hover:text-white transition-colors">
-                        Join Party
+                        Join Household
                     </button>
                 </div>
 
                 <!-- Create New -->
                 <div class="bg-brand-navy p-6 rounded-xl border border-brand-gold/30 text-white">
-                    <h3 class="font-bold text-brand-gold mb-2"><i class="fas fa-crown mr-2"></i>Create New Party</h3>
-                    <p class="text-xs text-gray-300 mb-4">I am the Head of Household and will fill out the headcount and budget for my group.</p>
+                    <h3 class="font-bold text-brand-gold mb-2"><i class="fas fa-home mr-2"></i>Set up my household</h3>
+                    <p class="text-xs text-gray-300 mb-4">I'll fill in who's coming from our house, our budget, and the dates we can do.</p>
                     <input type="text" id="new-party-name" class="w-full px-4 py-3 mb-4 bg-white/10 border border-white/20 rounded-lg text-sm text-white focus:border-brand-gold outline-none" placeholder="e.g., The Smith Family">
                     <button onclick="createParty()" class="w-full bg-brand-gold text-brand-navy py-2.5 rounded-lg font-bold hover:bg-[#b59045] transition-colors">
-                        Establish Party
+                        Create Household
                     </button>
                 </div>
             </div>
@@ -223,7 +223,7 @@
                         </div>
 
                         <div>
-                            <h4 class="font-serif text-xl font-semibold mb-3 text-brand-navy">About this Estate</h4>
+                            <h4 class="font-serif text-xl font-semibold mb-3 text-brand-navy">About this place</h4>
                             <p class="text-gray-600 leading-relaxed text-sm md:text-base" id="modal-description">
                                 Description goes here.
                             </p>
@@ -240,7 +240,7 @@
                         <div id="modal-warning-container" class="hidden mt-6 p-4 rounded-xl border border-red-200 bg-red-50 flex items-start gap-3">
                             <i class="fas fa-exclamation-triangle text-red-500 mt-1"></i>
                             <div>
-                                <h5 class="font-bold text-red-800 text-sm">Due Diligence Risk Warning</h5>
+                                <h5 class="font-bold text-red-800 text-sm">Good to know before we book</h5>
                                 <p class="text-xs text-red-700 mt-1" id="modal-warning-text">Warning text.</p>
                             </div>
                         </div>
@@ -248,7 +248,7 @@
 
                     <!-- Right: Financials & Action -->
                     <div class="bg-brand-lightgold/50 p-6 rounded-xl border border-brand-gold/20 h-fit sticky top-6">
-                        <h4 class="font-serif text-lg font-semibold text-brand-navy mb-4 border-b border-brand-gold/20 pb-2">Financial Overview</h4>
+                        <h4 class="font-serif text-lg font-semibold text-brand-navy mb-4 border-b border-brand-gold/20 pb-2">Cost</h4>
                         
                         <div class="space-y-4 mb-6" id="modal-financials">
                             <!-- Populated by JS -->
@@ -259,7 +259,7 @@
                         </div>
 
                         <button id="modal-vote-btn" onclick="toggleVoteCurrentProperty()" class="w-full py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 border-2 border-brand-navy text-brand-navy hover:bg-brand-navy hover:text-white">
-                            <i class="far fa-heart" id="modal-vote-icon"></i> <span id="modal-vote-text">Vote for this Estate</span>
+                            <i class="far fa-heart" id="modal-vote-icon"></i> <span id="modal-vote-text">I'd go here</span>
                         </button>
                     </div>
                 </div>
@@ -291,7 +291,7 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
                 <div>
                     <h1 id="site-title" class="font-serif text-xl md:text-2xl font-bold text-brand-lightgold tracking-tight">Annual Family Trip</h1>
-                    <p class="text-[10px] md:text-xs text-brand-gold/80 font-medium tracking-widest uppercase mt-0.5">Generational Wealth Scouting Portal</p>
+                    <p id="site-subtitle" class="text-[10px] md:text-xs text-brand-gold/80 font-medium tracking-widest uppercase mt-0.5">Where are we going this year?</p>
                 </div>
                 <div class="flex items-center gap-3 bg-white/5 px-3 md:px-4 py-2 rounded-full border border-white/10">
                     <select id="currency-select" title="Show all prices in" class="bg-brand-navy text-brand-gold text-xs font-bold border border-brand-gold/40 rounded-md px-2 py-1 outline-none cursor-pointer">
@@ -313,10 +313,24 @@
             <div id="circle-bar" class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-brand-gold/30 rounded-xl px-5 py-3 -mt-2">
                 <div class="text-sm"><span class="text-gray-500">Circle:</span> <strong id="display-group-name" class="text-brand-navy font-serif text-base"></strong></div>
                 <div class="text-xs text-gray-500 flex items-center gap-2">Invite code <button id="group-code" onclick="copyGroupCode()" class="font-mono text-sm tracking-widest bg-brand-lightgold border border-dashed border-brand-gold rounded px-2 py-1 text-brand-navy hover:bg-yellow-50" title="Copy"></button><span class="hidden sm:inline">— share with other households in your circle</span></div>
+                <label id="acq-toggle-wrap" class="hidden text-xs text-gray-500 flex items-center gap-2 cursor-pointer" title="Shows the estate-purchase track: buy-target listings, the co-ownership explainer and the investment questions."><input type="checkbox" id="acq-toggle" class="accent-brand-gold"> Show estate-purchase track</label>
             </div>
             
-            <!-- Generational Wealth Explainer -->
-            <section class="glass-card rounded-2xl overflow-hidden shadow-lg border border-brand-gold/30">
+            <!-- Friendly intro (always shown) -->
+            <section class="glass-card rounded-2xl p-6 md:p-8 border border-brand-gold/30 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                <div class="md:col-span-2">
+                    <h2 class="font-serif text-3xl font-bold text-brand-navy mb-2">Let's pick a place we'll all love.</h2>
+                    <p class="text-gray-600 text-sm leading-relaxed">Have a look through the houses below, tap any of them for photos and details, and heart the ones you'd happily spend a week in. Heads of household add who's coming, what dates work, and what's comfortable to spend. When everyone's weighed in, the favorites float to the top.</p>
+                </div>
+                <div class="grid grid-cols-3 md:grid-cols-1 gap-3 text-center md:text-left">
+                    <div class="bg-brand-lightgold/60 rounded-xl p-3"><div class="text-brand-gold text-xl"><i class="fas fa-images"></i></div><div class="text-xs font-semibold text-brand-navy mt-1">Browse</div></div>
+                    <div class="bg-brand-lightgold/60 rounded-xl p-3"><div class="text-brand-gold text-xl"><i class="fas fa-heart"></i></div><div class="text-xs font-semibold text-brand-navy mt-1">Heart your picks</div></div>
+                    <div class="bg-brand-lightgold/60 rounded-xl p-3"><div class="text-brand-gold text-xl"><i class="fas fa-calendar-check"></i></div><div class="text-xs font-semibold text-brand-navy mt-1">Add your dates</div></div>
+                </div>
+            </section>
+
+            <!-- Generational Wealth Explainer (acquisition track only) -->
+            <section class="acq-only glass-card rounded-2xl overflow-hidden shadow-lg border border-brand-gold/30">
                 <div class="grid grid-cols-1 md:grid-cols-12">
                     <div class="md:col-span-4 bg-brand-navy p-8 text-white flex flex-col justify-center relative overflow-hidden">
                         <div class="absolute top-0 right-0 -mt-10 -mr-10 text-brand-gold/10 text-9xl">
@@ -358,8 +372,8 @@
 
             <div id="logistics-section" class="hidden-section">
                 <div class="mb-4">
-                    <h2 class="font-serif text-2xl font-bold text-brand-navy border-l-4 border-brand-gold pl-3">Household Logistics Intake</h2>
-                    <p class="text-sm text-gray-500 mt-1 pl-4">As the Head of Household for <strong id="display-party-name" class="text-brand-navy"></strong>, please fill out your group's details.</p>
+                    <h2 class="font-serif text-2xl font-bold text-brand-navy border-l-4 border-brand-gold pl-3">Your household</h2>
+                    <p class="text-sm text-gray-500 mt-1 pl-4">You're setting things up for <strong id="display-party-name" class="text-brand-navy"></strong>. Who's coming, what works budget-wise, and when?</p>
                 </div>
                 
                 <form id="logistics-form" class="space-y-6">
@@ -368,10 +382,10 @@
                         <!-- Party Configuration -->
                         <div class="lg:col-span-5 space-y-6">
                             <div class="glass-card p-6 rounded-2xl">
-                                <h3 class="font-serif text-lg font-semibold mb-4 border-b border-gray-100 pb-2"><i class="fas fa-users text-brand-gold mr-2"></i> Household Members</h3>
+                                <h3 class="font-serif text-lg font-semibold mb-4 border-b border-gray-100 pb-2"><i class="fas fa-users text-brand-gold mr-2"></i> Who's coming</h3>
                                 
                                 <div class="mb-5">
-                                    <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Total Party Size</label>
+                                    <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">How many from your house</label>
                                     <div class="flex items-center gap-3">
                                         <button type="button" onclick="adjustPartySize(-1)" class="w-10 h-10 rounded-lg bg-gray-100 hover:bg-gray-200 text-brand-navy font-bold text-xl flex items-center justify-center transition-colors">-</button>
                                         <input type="number" id="input-party-size" min="1" max="20" value="1" class="w-16 text-center py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-gold outline-none font-bold text-lg" required readonly>
@@ -388,11 +402,11 @@
                         <!-- Budgets & Dates -->
                         <div class="lg:col-span-7 space-y-6">
                             <div class="glass-card p-6 rounded-2xl">
-                                <h3 class="font-serif text-lg font-semibold mb-4 border-b border-gray-100 pb-2"><i class="fas fa-wallet text-brand-gold mr-2"></i> Budget & Timing</h3>
+                                <h3 class="font-serif text-lg font-semibold mb-4 border-b border-gray-100 pb-2"><i class="fas fa-wallet text-brand-gold mr-2"></i> Budget & dates</h3>
                                 
                                 <div class="space-y-4 mb-6">
                                     <div>
-                                        <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">Total Trip Budget ($)</label>
+                                        <label class="block text-xs font-semibold uppercase text-gray-500 mb-1">What's comfortable for the whole trip ($)</label>
                                         <div class="relative">
                                             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">$</span>
                                             <input type="number" id="budget-total" placeholder="15000" class="w-full pl-8 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:border-brand-gold outline-none" required>
@@ -410,7 +424,7 @@
                                     </div>
                                 </div>
     
-                                <h4 class="text-xs font-semibold uppercase text-brand-navy mb-2">Preferred Dates</h4>
+                                <h4 class="text-xs font-semibold uppercase text-brand-navy mb-2">Dates that work for you</h4>
                                 <div id="dates-container" class="space-y-2 mb-3">
                                     <!-- Populated by JS -->
                                 </div>
@@ -420,7 +434,7 @@
                             </div>
 
                             <!-- Investment Questionnaire -->
-                            <div class="glass-card p-6 rounded-2xl bg-brand-navy text-white relative overflow-hidden">
+                            <div class="acq-only glass-card p-6 rounded-2xl bg-brand-navy text-white relative overflow-hidden">
                                 <div class="absolute -bottom-10 -right-10 text-white/5 text-9xl pointer-events-none">
                                     <i class="fas fa-chart-line"></i>
                                 </div>
@@ -468,7 +482,7 @@
                             </div>
                             
                             <button type="submit" id="submit-logistics-btn" class="w-full bg-brand-navy text-white font-bold text-lg py-4 rounded-xl hover:bg-gray-800 transition-all shadow-lg flex justify-center items-center gap-3">
-                                <i class="fas fa-save"></i> Save Household Logistics
+                                <i class="fas fa-save"></i> Save
                             </button>
                         </div>
                     </div>
@@ -480,11 +494,11 @@
             <div id="voting-section">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
                     <div>
-                        <h3 class="font-serif text-3xl font-bold text-brand-navy"><i class="fas fa-globe-americas text-brand-gold mr-3"></i> Global Estate Targets</h3>
-                        <p class="text-sm text-gray-500 mt-2 max-w-3xl">Review the curated list of global properties. Click on an estate to view financial due diligence, risk warnings, and to cast your individual vote. Everyone in the family gets to vote! Votes save instantly; the tally under each estate is your whole party.</p>
+                        <h3 id="listings-title" class="font-serif text-3xl font-bold text-brand-navy"><i class="fas fa-globe-americas text-brand-gold mr-3"></i> Places we could go</h3>
+                        <p id="listings-intro" class="text-sm text-gray-500 mt-2 max-w-3xl">Tap a house for photos and details, then heart the ones you'd go to. Everyone gets a say, and your hearts save on their own. The count under each place is the whole circle.</p>
                     </div>
                     <div class="text-sm font-bold text-brand-navy bg-brand-gold/20 border border-brand-gold/40 px-4 py-2 rounded-full whitespace-nowrap flex items-center gap-2 shadow-sm">
-                        <i class="fas fa-poll text-brand-gold"></i> Your Votes: <span id="vote-count" class="text-lg bg-white px-2 py-0.5 rounded-md shadow-inner text-brand-gold">0</span>
+                        <i class="fas fa-heart text-brand-gold"></i> Your picks: <span id="vote-count" class="text-lg bg-white px-2 py-0.5 rounded-md shadow-inner text-brand-gold">0</span>
                     </div>
                 </div>
                 
@@ -494,11 +508,11 @@
 
                 <div class="mt-8 glass-card p-6 rounded-2xl flex flex-col sm:flex-row gap-4 items-center justify-between">
                     <div class="w-full">
-                        <label class="block text-xs font-semibold uppercase text-gray-500 mb-2">Have a suggestion not on the list?</label>
-                        <input type="text" id="custom-suggestion" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm focus:border-brand-gold outline-none" placeholder="Drop a Zillow or Airbnb link here...">
+                        <label class="block text-xs font-semibold uppercase text-gray-500 mb-2">Found somewhere great that isn't here?</label>
+                        <input type="text" id="custom-suggestion" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm focus:border-brand-gold outline-none" placeholder="Paste the Airbnb / VRBO / listing link…">
                     </div>
                     <button onclick="saveVotes()" id="save-votes-btn" class="w-full sm:w-auto bg-brand-gold text-brand-navy px-8 py-3 rounded-lg font-bold hover:bg-[#b59045] transition-colors whitespace-nowrap shadow-lg shadow-brand-gold/30">
-                        Submit Votes
+                        Save
                     </button>
                 </div>
             </div>

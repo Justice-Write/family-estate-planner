@@ -148,7 +148,8 @@ function showApp() {
   $('display-party-role').textContent = (state.isLeader ? 'Head of ' : 'Member of ') + state.party.name;
   $('display-group-name').textContent = state.group.name;
   $('site-title').textContent = `${state.group.name} — Annual Trip`;
-  document.title = `${state.group.name} — Trip & Estate Scouting`;
+  document.title = `${state.group.name} — Family Trip Planner`;
+  applyAcquisitionMode();
   $('group-code').textContent = state.group.code;
   if (state.isLeader) {
     $('logistics-section').classList.remove('hidden-section');
@@ -308,6 +309,28 @@ $('currency-select').addEventListener('change', async (e) => {
   if (state.user) sb.auth.updateUser({ data: { currency: state.currency } });
 });
 
+// ── Acquisition track (per-circle switch, off by default) ───────────────────
+function acqOn() { return !!state.group?.show_acquisition; }
+function applyAcquisitionMode() {
+  const on = acqOn();
+  document.querySelectorAll('.acq-only').forEach(el => el.classList.toggle('hidden', !on));
+  $('site-subtitle').textContent = on ? 'Family trip & estate scouting' : 'Where are we going this year?';
+  $('listings-title').innerHTML = `<i class="fas fa-globe-americas text-brand-gold mr-3"></i> ${on ? 'Places we could go — and a few we could buy' : 'Places we could go'}`;
+  $('listings-intro').textContent = on
+    ? 'Tap a place for photos, costs and the things to check before booking. Rentals are for this trip; “buy target” cards are estates the family could look at owning together. Heart anything you’d go to.'
+    : 'Tap a house for photos and details, then heart the ones you’d go to. Everyone gets a say, and your hearts save on their own. The count under each place is the whole circle.';
+  const canToggle = state.isAdmin || state.group?.owner_user_id === state.user?.id;
+  $('acq-toggle-wrap').classList.toggle('hidden', !canToggle);
+  $('acq-toggle').checked = on;
+}
+$('acq-toggle').addEventListener('change', async (e) => {
+  const { error } = await sb.rpc('trip_set_group_acquisition', { p_group: state.group.id, p_show: e.target.checked });
+  if (error) { e.target.checked = !e.target.checked; return showToast(friendly(error.message), 'error'); }
+  state.group.show_acquisition = e.target.checked;
+  showToast(e.target.checked ? 'Estate-purchase track is now visible to your circle.' : 'Estate-purchase track hidden from your circle.');
+  await loadProperties(); await loadTally(); applyAcquisitionMode(); renderPropertiesGrid();
+});
+
 // ── Estates & votes ─────────────────────────────────────────────────────────
 const isBuyTarget = (p) => p.status === 'sale';
 const myVote = (id) => state.votes.some(v => v.property_id === id && v.user_id === state.user.id);
@@ -323,7 +346,7 @@ function renderPropertiesGrid() {
         <div class="h-44 relative overflow-hidden bg-gray-200">
           ${hero ? `<img src="${esc(hero)}" alt="${esc(prop.name)}" class="w-full h-full object-cover transition-transform duration-500 hover:scale-110">` : `<div class="w-full h-full flex items-center justify-center text-gray-400 text-sm"><i class="fas fa-image mr-2"></i>No photo yet</div>`}
           <div class="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider shadow-sm text-brand-navy">
-            ${isBuyTarget(prop) ? '<i class="fas fa-key text-brand-gold mr-1"></i> Buy Target' : 'Rental Only'}
+            ${isBuyTarget(prop) ? '<i class="fas fa-key text-brand-gold mr-1"></i> Buy Target' : (acqOn() ? 'Rental Only' : 'Vacation Rental')}
           </div>
           ${voted ? `<div class="absolute top-3 left-3 bg-brand-gold text-white w-8 h-8 rounded-full flex items-center justify-center shadow-lg"><i class="fas fa-check"></i></div>` : ''}
         </div>
@@ -358,12 +381,12 @@ window.openPropertyModal = (id) => {
   $('modal-tags').innerHTML = `
     <span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-semibold"><i class="fas fa-users text-brand-gold mr-1"></i> ${esc(prop.capacity)}</span>
     <span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-semibold"><i class="fas fa-tree text-brand-gold mr-1"></i> ${esc(prop.acreage)}</span>
-    <span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-semibold"><i class="fas fa-home text-brand-gold mr-1"></i> ${isBuyTarget(prop) ? 'Acquisition Target' : 'Vacation Rental'}</span>`;
+    ${acqOn() ? `<span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-semibold"><i class="fas fa-home text-brand-gold mr-1"></i> ${isBuyTarget(prop) ? 'Acquisition Target' : 'Vacation Rental'}</span>` : ''}`;
   $('modal-amenities').innerHTML = (prop.amenities || []).map(a => `<li class="flex items-center gap-2"><i class="fas fa-check text-brand-gold text-xs"></i> ${esc(a)}</li>`).join('');
   $('modal-financials').innerHTML = `
-    <div class="pb-3 border-b border-gray-100/50"><div class="text-sm text-gray-600">Rental / Trial Stay</div><div class="font-bold text-brand-navy text-right">${priceLine(prop.rental_amount, prop.rental_currency, prop.rental_unit, prop.rental_cost)}</div>${prop.rental_amount != null ? `<div class="text-[11px] text-gray-400 mt-1">${esc(prop.rental_cost)}</div>` : ''}</div>
-    <div class="pb-3 border-b border-gray-100/50"><div class="text-sm text-gray-600">Acquisition Price</div><div class="font-bold text-right ${isBuyTarget(prop) ? 'text-green-700' : 'text-gray-500'}">${priceLine(prop.buy_amount, prop.buy_currency, '', prop.buy_cost)}</div>${prop.buy_amount != null && prop.buy_cost ? `<div class="text-[11px] text-gray-400 mt-1">${esc(prop.buy_cost)}</div>` : ''}</div>
-    <div class="flex justify-between items-center pb-3 border-b border-gray-100/50"><span class="text-sm text-gray-600">Circle votes</span><span class="font-bold text-brand-navy">${tally(prop.id)}</span></div>
+    <div class="pb-3 border-b border-gray-100/50"><div class="text-sm text-gray-600">${acqOn() ? 'Rental / Trial Stay' : 'Price'}</div><div class="font-bold text-brand-navy text-right">${priceLine(prop.rental_amount, prop.rental_currency, prop.rental_unit, prop.rental_cost)}</div>${prop.rental_amount != null ? `<div class="text-[11px] text-gray-400 mt-1">${esc(prop.rental_cost)}</div>` : ''}</div>
+    ${acqOn() ? `<div class="pb-3 border-b border-gray-100/50"><div class="text-sm text-gray-600">Acquisition Price</div><div class="font-bold text-right ${isBuyTarget(prop) ? 'text-green-700' : 'text-gray-500'}">${priceLine(prop.buy_amount, prop.buy_currency, '', prop.buy_cost)}</div>${prop.buy_amount != null && prop.buy_cost ? `<div class="text-[11px] text-gray-400 mt-1">${esc(prop.buy_cost)}</div>` : ''}</div>` : ''}
+    <div class="flex justify-between items-center pb-3 border-b border-gray-100/50"><span class="text-sm text-gray-600">${acqOn() ? 'Circle votes' : 'Hearts from the circle'}</span><span class="font-bold text-brand-navy">${tally(prop.id)}</span></div>
     ${state.ratesDate ? `<div class="text-[10px] text-gray-400">Rates: ECB ${esc(state.ratesDate)}</div>` : `<div class="text-[10px] text-gray-400">Rates: planning estimates (live rates unavailable)</div>`}`;
   const link = prop.listing_url ? `<a href="${esc(prop.listing_url)}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-sm font-semibold text-brand-navy underline decoration-brand-gold underline-offset-4 hover:text-brand-gold"><i class="fas fa-external-link-alt text-brand-gold"></i> View original listing</a>` : '';
   const gal = (prop.gallery || []).slice(0, 6).map(u => `<img src="${esc(u)}" class="h-20 w-full object-cover rounded-lg border border-gray-100 cursor-pointer" onclick="document.getElementById('modal-image').src=this.src">`).join('');
@@ -400,10 +423,10 @@ function updateModalVoteButtonState() {
   const btn = $('modal-vote-btn'), icon = $('modal-vote-icon'), text = $('modal-vote-text');
   if (myVote(currentModalPropertyId)) {
     btn.className = 'w-full py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 bg-brand-gold text-white shadow-lg shadow-brand-gold/30 hover:bg-[#b59045]';
-    icon.className = 'fas fa-check-circle'; text.textContent = 'Voted for Estate';
+    icon.className = 'fas fa-check-circle'; text.textContent = acqOn() ? 'Voted for Estate' : 'I’d go here ✓';
   } else {
     btn.className = 'w-full py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 border-2 border-brand-navy text-brand-navy hover:bg-brand-navy hover:text-white';
-    icon.className = 'far fa-heart'; text.textContent = 'Vote for this Estate';
+    icon.className = 'far fa-heart'; text.textContent = acqOn() ? 'Vote for this Estate' : 'I’d go here';
   }
 }
 
@@ -460,7 +483,7 @@ async function adminCall(fn, args, successMsg) {
   showToast(successMsg || 'Done.');
   await loadAdmin();
   // if the admin changed their own circle/party, reload the main app quietly
-  if (['trip_admin_merge_groups','trip_admin_merge_parties','trip_admin_move_user'].includes(fn)) { await loadGroup(); }
+  if (['trip_admin_merge_groups','trip_admin_merge_parties','trip_admin_move_user','trip_set_group_acquisition'].includes(fn)) { await loadGroup(); }
   return true;
 }
 
@@ -522,6 +545,7 @@ function renderAdmin() {
         </div>
         <div class="flex flex-wrap gap-1">
           <button class="adm-btn text-brand-navy" onclick="adminRename('group','${g.id}','${esc(g.name)}')"><i class="fas fa-pen mr-1"></i>Rename</button>
+          <button class="adm-btn text-brand-navy" onclick="adminCall('trip_set_group_acquisition',{p_group:'${g.id}',p_show:${!g.show_acquisition}},'Estate-purchase track ${g.show_acquisition ? 'hidden' : 'shown'} for ${esc(g.name)}.')" title="Toggle the estate-purchase track for this circle"><i class="fas fa-${g.show_acquisition ? 'eye-slash' : 'eye'} mr-1"></i>${g.show_acquisition ? 'Hide purchase track' : 'Show purchase track'}</button>
           ${d.groups.length > 1 ? `<select class="text-xs border border-gray-200 rounded px-1.5 py-1 text-brand-navy" onchange="if(this.value){adminMergeGroups('${g.id}','${esc(g.name)}',this.value,this.options[this.selectedIndex].text)}"><option value="">Merge this circle into…</option>${groupOptions(g.id)}</select>` : ''}
           ${g.members == 0 ? `<button class="adm-btn text-red-600" onclick="if(confirm('Delete empty circle ${esc(g.name)}?'))adminCall('trip_admin_delete_group',{p_group:'${g.id}'},'Circle deleted.')"><i class="fas fa-trash"></i></button>` : ''}
         </div>
