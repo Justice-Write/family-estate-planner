@@ -75,6 +75,7 @@ sb.auth.onAuthStateChange(async (_evt, session) => {
   state.currency = state.user.user_metadata?.currency || (() => { try { return localStorage.getItem('currency'); } catch { return null; } })() || 'USD';
   $('currency-select').value = state.currency;
   showLoading('Checking family roster...');
+  await checkAdmin();
   await loadGroup();
 });
 
@@ -441,3 +442,144 @@ async function loadSuggestion() {
   const { data } = await sb.from('trip_party_users').select('suggestion').eq('user_id', state.user.id).maybeSingle();
   state.suggestion = data?.suggestion ?? '';
 }
+
+// ── Admin console ───────────────────────────────────────────────────────────
+let adminData = null;
+async function checkAdmin() {
+  const { data } = await sb.rpc('trip_is_admin');
+  state.isAdmin = !!data;
+  $('admin-btn').classList.toggle('hidden', !state.isAdmin);
+}
+window.openAdmin = async () => { $('admin-modal').classList.remove('hidden'); await loadAdmin(); };
+window.closeAdmin = () => $('admin-modal').classList.add('hidden');
+$('admin-modal').addEventListener('click', (e) => { if (e.target.id === 'admin-modal') closeAdmin(); });
+
+async function adminCall(fn, args, successMsg) {
+  const { error } = await sb.rpc(fn, args);
+  if (error) { showToast(friendly(error.message), 'error'); return false; }
+  showToast(successMsg || 'Done.');
+  await loadAdmin();
+  // if the admin changed their own circle/party, reload the main app quietly
+  if (['trip_admin_merge_groups','trip_admin_merge_parties','trip_admin_move_user'].includes(fn)) { await loadGroup(); }
+  return true;
+}
+
+window.loadAdmin = async () => {
+  $('admin-body').innerHTML = '<div class="text-gray-400 py-8 text-center"><div class="spinner mx-auto mb-3"></div>Loading…</div>';
+  const { data, error } = await sb.rpc('trip_admin_overview');
+  if (error) { $('admin-body').innerHTML = `<p class="text-red-600">${esc(friendly(error.message))}</p>`; return; }
+  adminData = data; renderAdmin();
+};
+
+const when = (ts) => ts ? new Date(ts).toLocaleDateString() : 'never';
+const groupOptions = (exceptId) => adminData.groups.filter(g => g.id !== exceptId).map(g => `<option value="${g.id}">${esc(g.name)} (${esc(g.code)})</option>`).join('');
+const partyOptions = (groupId, exceptId) => adminData.groups.filter(g => !groupId || g.id === groupId).flatMap(g => g.parties.filter(p => p.id !== exceptId).map(p => `<option value="${p.id}">${esc(g.name)} › ${esc(p.name)}</option>`)).join('');
+
+function userRow(u, ctx) {
+  const parties = adminData.groups.flatMap(g => g.parties.map(p => ({ gid: g.id, gname: g.name, pid: p.id, pname: p.name })));
+  return `
+    <tr class="border-t border-gray-100 align-top">
+      <td class="py-2 pr-3">
+        <div class="font-semibold text-brand-navy">${esc(u.name || '—')} ${ctx.role === 'head' ? '<span class="ml-1 text-[10px] bg-brand-gold text-white px-1.5 py-0.5 rounded">HEAD</span>' : ''}</div>
+        <div class="text-xs text-gray-500 break-all">${esc(u.email)}</div>
+        <div class="text-[11px] text-gray-400">last sign-in ${when(u.last_sign_in)}${u.votes != null ? ` · ${u.votes} vote${u.votes === 1 ? '' : 's'}` : ''}</div>
+        ${u.suggestion ? `<div class="text-[11px] text-gray-500 mt-1"><i class="fas fa-link text-brand-gold mr-1"></i>${esc(u.suggestion)}</div>` : ''}
+      </td>
+      <td class="py-2 text-right whitespace-nowrap">
+        <div class="flex flex-wrap gap-1 justify-end">
+          <select class="text-xs border border-gray-200 rounded px-1.5 py-1 max-w-[12rem]" onchange="if(this.value){adminMove('${u.user_id}', this.value)}">
+            <option value="">Move to…</option>
+            ${adminData.groups.map(g => `<optgroup label="${esc(g.name)}"><option value="${g.id}|">${esc(g.name)} (no household yet)</option>${g.parties.map(p => `<option value="${g.id}|${p.id}">${esc(p.name)}</option>`).join('')}</optgroup>`).join('')}
+          </select>
+          ${ctx.pid && ctx.role !== 'head' ? `<button class="adm-btn" onclick="adminCall('trip_admin_set_head',{p_party:'${ctx.pid}',p_user:'${u.user_id}'},'Head of household updated.')" title="Make head of household"><i class="fas fa-crown"></i></button>` : ''}
+          <button class="adm-btn" onclick="adminRenameUser('${u.user_id}','${esc(u.name || '')}')" title="Fix name"><i class="fas fa-pen"></i></button>
+          <button class="adm-btn" onclick="adminPassword('${u.user_id}','${esc(u.email)}')" title="Set a temporary password"><i class="fas fa-key"></i></button>
+          <button class="adm-btn text-red-600" onclick="adminDeleteUser('${u.user_id}','${esc(u.email)}')" title="Delete this account"><i class="fas fa-user-times"></i></button>
+        </div>
+      </td>
+    </tr>`;
+}
+
+function renderAdmin() {
+  const d = adminData;
+  const style = `<style>.adm-btn{border:1px solid #e5e7eb;border-radius:.375rem;padding:.25rem .5rem;font-size:.7rem;background:#fff}.adm-btn:hover{background:#f8fafc}</style>`;
+  const totalUsers = d.groups.reduce((n, g) => n + Number(g.members), 0) + d.orphans.length;
+  let html = style + `
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div class="bg-brand-lightgold/60 rounded-xl p-3"><div class="text-[10px] uppercase text-gray-500 font-semibold">Circles</div><div class="text-2xl font-bold text-brand-navy">${d.groups.length}</div></div>
+      <div class="bg-brand-lightgold/60 rounded-xl p-3"><div class="text-[10px] uppercase text-gray-500 font-semibold">Households</div><div class="text-2xl font-bold text-brand-navy">${d.groups.reduce((n, g) => n + g.parties.length, 0)}</div></div>
+      <div class="bg-brand-lightgold/60 rounded-xl p-3"><div class="text-[10px] uppercase text-gray-500 font-semibold">Accounts</div><div class="text-2xl font-bold text-brand-navy">${totalUsers}</div></div>
+      <div class="bg-brand-lightgold/60 rounded-xl p-3"><div class="text-[10px] uppercase text-gray-500 font-semibold">Admins</div><div class="text-xs font-bold text-brand-navy break-all">${d.admins.map(esc).join('<br>')}</div></div>
+    </div>`;
+
+  for (const g of d.groups) {
+    html += `
+    <div class="border border-gray-200 rounded-2xl overflow-hidden">
+      <div class="bg-brand-navy text-white p-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div class="font-serif text-xl text-brand-gold">${esc(g.name)}</div>
+          <div class="text-xs text-gray-300">Invite <span class="font-mono tracking-wider">${esc(g.code)}</span> · owner ${esc(g.owner_email)} · ${g.members} member${g.members == 1 ? '' : 's'} · created ${when(g.created_at)}</div>
+        </div>
+        <div class="flex flex-wrap gap-1">
+          <button class="adm-btn text-brand-navy" onclick="adminRename('group','${g.id}','${esc(g.name)}')"><i class="fas fa-pen mr-1"></i>Rename</button>
+          ${d.groups.length > 1 ? `<select class="text-xs border border-gray-200 rounded px-1.5 py-1 text-brand-navy" onchange="if(this.value){adminMergeGroups('${g.id}','${esc(g.name)}',this.value,this.options[this.selectedIndex].text)}"><option value="">Merge this circle into…</option>${groupOptions(g.id)}</select>` : ''}
+          ${g.members == 0 ? `<button class="adm-btn text-red-600" onclick="if(confirm('Delete empty circle ${esc(g.name)}?'))adminCall('trip_admin_delete_group',{p_group:'${g.id}'},'Circle deleted.')"><i class="fas fa-trash"></i></button>` : ''}
+        </div>
+      </div>
+      <div class="p-4 space-y-4">`;
+    if (!g.parties.length) html += `<p class="text-gray-400 text-xs">No households yet.</p>`;
+    for (const p of g.parties) {
+      html += `
+        <div class="border border-gray-100 rounded-xl">
+          <div class="bg-gray-50 px-3 py-2 flex flex-wrap items-center justify-between gap-2 rounded-t-xl">
+            <div><span class="font-bold text-brand-navy">${esc(p.name)}</span> <span class="text-xs text-gray-500">· head ${esc(p.head_email)} · ${p.headcount} on roster${p.budget_total ? ` · budget ${money(Number(p.budget_total), 'USD')}` : ''}${p.votes_locked ? ' · <span class="text-red-600 font-semibold">votes locked</span>' : ''}</span></div>
+            <div class="flex flex-wrap gap-1">
+              <button class="adm-btn" onclick="adminRename('party','${p.id}','${esc(p.name)}')"><i class="fas fa-pen"></i></button>
+              <button class="adm-btn" onclick="adminCall('trip_admin_lock_votes',{p_party:'${p.id}',p_locked:${!p.votes_locked}},'Votes ${p.votes_locked ? 'unlocked' : 'locked'}.')" title="${p.votes_locked ? 'Unlock votes' : 'Lock votes'}"><i class="fas fa-${p.votes_locked ? 'lock-open' : 'lock'}"></i></button>
+              <select class="text-xs border border-gray-200 rounded px-1.5 py-1" onchange="if(this.value){adminMergeParties('${p.id}','${esc(p.name)}',this.value,this.options[this.selectedIndex].text)}"><option value="">Merge household into…</option>${partyOptions(null, p.id)}</select>
+              ${!p.users.length ? `<button class="adm-btn text-red-600" onclick="if(confirm('Delete empty household ${esc(p.name)}?'))adminCall('trip_admin_delete_party',{p_party:'${p.id}'},'Household deleted.')"><i class="fas fa-trash"></i></button>` : ''}
+            </div>
+          </div>
+          <table class="w-full"><tbody>${p.users.map(u => userRow(u, { pid: p.id, role: u.role })).join('') || '<tr><td class="p-3 text-xs text-gray-400">No accounts in this household.</td></tr>'}</tbody></table>
+        </div>`;
+    }
+    if (g.unassigned.length) {
+      html += `<div class="border border-dashed border-yellow-300 bg-yellow-50/50 rounded-xl"><div class="px-3 py-2 text-xs font-semibold text-yellow-800">In this circle but not in a household yet</div><table class="w-full"><tbody>${g.unassigned.map(u => userRow(u, {})).join('')}</tbody></table></div>`;
+    }
+    html += `</div></div>`;
+  }
+  if (d.orphans.length) {
+    html += `<div class="border border-dashed border-red-300 bg-red-50/50 rounded-2xl"><div class="px-4 py-3 text-sm font-semibold text-red-800"><i class="fas fa-exclamation-circle mr-1"></i>Accounts that never joined a circle (likely duplicates or people who got stuck)</div><table class="w-full px-2"><tbody>${d.orphans.map(u => userRow(u, {})).join('')}</tbody></table></div>`;
+  }
+  $('admin-body').innerHTML = html;
+}
+
+window.adminMove = async (userId, target) => {
+  const [gid, pid] = target.split('|');
+  await adminCall('trip_admin_move_user', { p_user: userId, p_group: gid, p_party: pid || null }, 'Moved.');
+};
+window.adminMergeGroups = async (from, fromName, into, intoLabel) => {
+  if (!confirm(`Merge circle "${fromName}" INTO ${intoLabel}?\n\nAll its households, members and votes move over and "${fromName}" disappears. Its invite code stops working.`)) return loadAdmin();
+  await adminCall('trip_admin_merge_groups', { p_from: from, p_into: into }, 'Circles merged.');
+};
+window.adminMergeParties = async (from, fromName, into, intoLabel) => {
+  if (!confirm(`Merge household "${fromName}" INTO ${intoLabel}?\n\nMembers, roster and votes move over; "${fromName}" disappears. The target keeps its head of household.`)) return loadAdmin();
+  await adminCall('trip_admin_merge_parties', { p_from: from, p_into: into }, 'Households merged.');
+};
+window.adminRename = async (kind, id, current) => {
+  const name = prompt(`New name for this ${kind === 'group' ? 'circle' : 'household'}:`, current); if (!name || name === current) return;
+  await adminCall('trip_admin_rename', { p_kind: kind, p_id: id, p_name: name.trim() }, 'Renamed.');
+};
+window.adminRenameUser = async (userId, current) => {
+  const name = prompt('Display name for this person:', current); if (!name || name === current) return;
+  await adminCall('trip_admin_set_name', { p_user: userId, p_name: name.trim() }, 'Name updated.');
+};
+window.adminPassword = async (userId, email) => {
+  const pw = prompt(`Temporary password for ${email} (8+ characters). Tell them to sign in with it and then keep using it or ask you to change it again:`);
+  if (!pw) return; if (pw.length < 8) return showToast('8+ characters.', 'error');
+  await adminCall('trip_admin_set_password', { p_user: userId, p_password: pw }, `Password set for ${email}.`);
+};
+window.adminDeleteUser = async (userId, email) => {
+  if (!confirm(`Delete the account ${email}?\n\nTheir votes are removed. If they were the only person in a household, that household is deleted too. This cannot be undone.`)) return;
+  await adminCall('trip_admin_delete_user', { p_user: userId }, 'Account deleted.');
+};

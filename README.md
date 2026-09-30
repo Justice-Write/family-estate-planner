@@ -9,7 +9,7 @@ Static site (no build step) + Supabase. Everything in `public/` is the deployabl
 - Publishable key is in `app.js` — that's by design; RLS is the security boundary.
 
 ## The rules (who can do what)
-Enforced in Postgres by RLS — the front end only reflects them. Full SQL: `supabase/migrations/20260928_trip_planner.sql` → `20260929_v2_full_design.sql` → `20260929_v3_listing_url.sql` → `20260929_v4_groups_prices.sql`.
+Enforced in Postgres by RLS — the front end only reflects them. Full SQL: `supabase/migrations/20260928_trip_planner.sql` → `20260929_v2_full_design.sql` → `20260929_v3_listing_url.sql` → `20260929_v4_groups_prices.sql` → `20260930_v5_admin.sql`.
 
 | Actor | Can | Cannot |
 |---|---|---|
@@ -33,6 +33,9 @@ Verified against the live database with a 16-check RLS test (head/member/outside
 ## Supabase settings to check once (dashboard → Authentication)
 1. **Email confirmations** — default ON. For a family app, turn it OFF (Providers → Email → "Confirm email") so people can log in immediately. The app handles both cases.
 2. **Site URL** — set to your `*.pages.dev` URL so any auth emails link back correctly.
+
+## Admin console
+Admins are rows in `trip_admins` (Christian seeded). An **Admin** button appears in the header; it opens a console listing every circle → household → account, plus orphan accounts that never joined a circle. Actions (all server-side RPCs that check `trip_is_admin()`): move a person to any circle/household, merge a circle into another, merge a household into another (votes and roster carried over), rename, make head of household, lock/unlock votes, fix a display name, set a temporary password, delete a duplicate account, delete empty households/circles. Add another admin: `insert into trip_admins(user_id) select id from auth.users where email='…';`
 
 ## Circles (groups)
 Each extended family / friend group is a **circle** with an invite code. Parties, votes, suggestions and the party dropdown are all scoped to the circle. Listings with `group_id = null` are the shared catalog every circle sees; a row with `group_id` set is private to that circle. Christian's existing data was migrated into the circle **"Christian's Family"**. Rename: `update trip_groups set name = '…' where code = 'FAMILY-1204';`
@@ -61,6 +64,7 @@ update public.trip_parties set votes_locked = false where code = 'SMITH-1234';
 ```
 
 ## Changelog
+- 2026-09-30 (v5) — Admin console: `trip_admins` + 12 admin RPCs (overview, move, merge circles/households, rename, set head, lock votes, set name, set temp password, delete account/household/circle). 14-check live test passed.
 - 2026-09-29 (v4) — Circles (groups) with invite codes; all party/vote/suggestion queries scoped per circle; circle-wide tally RPC. Structured prices + header currency selector with live ECB rates. Weekly link-health and monthly research-refresh workflows. Research brief round two: price cap lifted, source diversity rule, structured price fields required.
 - 2026-09-29 (v3) — `listing_url` + `gallery` on properties (modal shows thumbnails + "View original listing"); `trip_list_suggestions()` feed; research handoff doc in `docs/`.
 - 2026-09-29 (v2) — Ported the full original design: 7 estates with Zillow-style modal, name-based identity (auth metadata), join-by-dropdown, ± party size (max 20), multiple date ranges (jsonb), capital + income questions, suggestion box. Votes save instantly; party tally on each card.

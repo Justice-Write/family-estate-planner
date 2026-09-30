@@ -267,6 +267,23 @@
         </div>
     </div>
 
+    <!-- Admin Console -->
+    <div id="admin-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-start justify-center p-2 sm:p-6 overflow-y-auto">
+        <div class="bg-white rounded-2xl w-full max-w-5xl my-4 shadow-2xl flex flex-col max-h-[95vh]">
+            <div class="flex justify-between items-center p-4 border-b border-gray-100 sticky top-0 bg-white z-10 rounded-t-2xl">
+                <div>
+                    <h3 class="font-serif text-2xl font-bold text-brand-navy"><i class="fas fa-user-shield text-brand-gold mr-2"></i>Admin Console</h3>
+                    <p class="text-xs text-gray-500">Every circle, household and member. Actions take effect immediately.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="loadAdmin()" class="text-xs font-bold text-brand-navy border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50"><i class="fas fa-sync-alt mr-1"></i>Refresh</button>
+                    <button onclick="closeAdmin()" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            <div id="admin-body" class="overflow-y-auto p-4 sm:p-6 space-y-6 text-sm"></div>
+        </div>
+    </div>
+
     <div id="main-app" class="hidden flex-col min-h-screen">
         
         <!-- Premium Header -->
@@ -286,6 +303,7 @@
                         <span id="display-party-role" class="text-[9px] text-brand-gold uppercase tracking-wider">Role</span>
                     </div>
                     <i class="fas fa-user-circle text-brand-gold text-xl"></i>
+                    <button id="admin-btn" onclick="openAdmin()" title="Admin console" class="hidden ml-2 text-brand-gold hover:text-white transition-colors"><i class="fas fa-user-shield"></i> <span class="hidden md:inline text-xs font-bold">Admin</span></button>
                     <button onclick="signOut()" title="Sign out" class="ml-2 text-gray-400 hover:text-brand-gold transition-colors"><i class="fas fa-sign-out-alt"></i></button>
                 </div>
             </div>
