@@ -1,0 +1,22 @@
+name: Listing research refresh (PR for review)
+on:
+  schedule: [{ cron: '23 7 1 * *' }]   # 1st of the month
+  workflow_dispatch:
+permissions: { contents: write, pull-requests: write }
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: node scripts/research-refresh.mjs
+        env:
+          PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
+          PPLX_MODEL: ${{ vars.PPLX_MODEL }}
+      - uses: peter-evans/create-pull-request@v6
+        with:
+          branch: research/refresh
+          title: "Listing research refresh — review before applying"
+          body: "Candidate SQL from the monthly Sonar run. Review copy, prices and images, then paste into the Supabase SQL editor. Nothing is applied automatically."
+          commit-message: "Research refresh candidates"
