@@ -1,9 +1,23 @@
 // Weekly freshness check: every hero, gallery, and listing URL on active cards must still resolve.
 // Needs SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (reads all rows, bypassing RLS). Prints a report; exit 1 on failures.
 const url = process.env.SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-if (!url || !key) { console.error('Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY'); process.exit(2); }
-const rows = await (await fetch(`${url}/rest/v1/trip_properties?select=id,name,active,image,gallery,listing_url&active=eq.true`, {
-  headers: { apikey: key, Authorization: `Bearer ${key}` } })).json();
+// Config/API problems must not pass silently: write a report + a non-zero `failures` output so the
+// workflow's issue step fires, then exit 2. Exit 1 is reserved for broken listing URLs.
+const configFail = async (msg) => {
+  console.error(msg);
+  if (process.env.GITHUB_OUTPUT) {
+    const fs = await import('node:fs');
+    fs.appendFileSync(process.env.GITHUB_OUTPUT, 'failures=config\n');
+    fs.writeFileSync('health-report.md', `# Listing health — ${new Date().toISOString().slice(0, 10)}\n\n**The check could not run.** ${msg}\n\nAdd or fix the repo secret \`SUPABASE_SERVICE_ROLE_KEY\` (Settings → Secrets and variables → Actions).\n`);
+  }
+  process.exit(2);
+};
+if (!url || !key) await configFail('SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not set.');
+const resp = await fetch(`${url}/rest/v1/trip_properties?select=id,name,active,image,gallery,listing_url&active=eq.true`, {
+  headers: { apikey: key, Authorization: `Bearer ${key}` } });
+const rows = await resp.json().catch(() => null);
+if (!resp.ok || !Array.isArray(rows)) await configFail(`Supabase read failed: HTTP ${resp.status} ${JSON.stringify(rows).slice(0, 300)}`);
+if (rows.length === 0) await configFail('Zero active listings returned: wrong key (anon instead of service role?) or table empty.');
 const checks = [];
 for (const r of rows) {
   if (r.image) checks.push({ id: r.id, kind: 'hero', u: r.image });

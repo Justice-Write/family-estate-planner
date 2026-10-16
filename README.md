@@ -47,8 +47,9 @@ Each extended family / friend group is a **circle** with an invite code. Parties
 Header dropdown converts every structured price (`rental_amount`/`rental_currency`/`rental_unit`, `buy_amount`/`buy_currency`) into the chosen currency using live ECB rates from api.frankfurter.dev (falls back to the research payload's planning rates for EUR/GBP). Choice is saved to the user's auth metadata + localStorage. Unstructured prices show their raw text.
 
 ## Automation (GitHub Actions)
-- `listing-health.yml` — weekly HEAD-check of every hero/gallery/listing URL on active cards; opens or updates an issue labelled `listing-health` on failures. Needs repo secret `SUPABASE_SERVICE_ROLE_KEY`.
-- `listing-research.yml` — monthly Perplexity Sonar run of the handoff brief; writes `supabase/data/candidates-DATE.sql` and opens a PR for review. Never auto-applies. Needs secret `PERPLEXITY_API_KEY` and repo variable `PPLX_MODEL` (current deep-research model name from Perplexity's docs).
+- `listing-health.yml` — weekly HEAD-check of every hero/gallery/listing URL on active cards; opens or updates an issue labelled `listing-health` on failures. Needs repo secret `SUPABASE_SERVICE_ROLE_KEY`. A missing/wrong key or a Supabase error now writes a report and triggers the issue step instead of passing silently (it was a silent no-op before 2026-10-16). The `listing-health` label must exist or the issue step itself fails (still a red X).
+- `listing-research.yml` — monthly Perplexity **Agent API** run (`/v1/agent`, background mode, preset `high` = old Sonar Deep Research; Sonar Chat Completions support ended 2026-09-27) of the handoff brief; writes `supabase/data/candidates-DATE.sql` + `.citations.json` and opens a PR for review. Never auto-applies; refuses to write output that isn't a `trip_properties` upsert. Needs secret `PERPLEXITY_API_KEY`. Preset is `high`; override with env `PPLX_PRESET` (`fast` / `low` / `medium` / `high` / `xhigh`). The workflow still passes an unused `PPLX_MODEL`; harmless.
+- **As of 2026-10-16 neither secret is set**, so both jobs will fail until they are added (Settings → Secrets and variables → Actions).
 
 ## Updating listings (the research loop)
 Hand `docs/HANDOFF-listings-research.md` to a research agent (Perplexity Computer). It returns one `listings-DATE.sql`; paste it into the Supabase SQL editor. Read family suggestions first with `select * from public.trip_list_suggestions();` and paste the output into the brief.
@@ -69,6 +70,7 @@ update public.trip_parties set votes_locked = false where code = 'SMITH-1234';
 ```
 
 ## Changelog
+- 2026-10-16 — Research script moved from Sonar `/chat/completions` (support ended 2026-09-27) to the Agent API (`/v1/agent`, background + polling, preset `high`; no `PPLX_MODEL` variable needed) and validates output before writing. Health check script now surfaces a missing/wrong secret through the issue step instead of passing silently (it had been a silent no-op). Workflow YAML unchanged. Both tested against a local mock API.
 - 2026-10-16 — Availability-first research brief for the Dec 15 – Jan 5 window (`docs/BRIEF-2026-10-16-availability-pass.md`). Removed the stale round-one placeholder-image table from the handoff brief (the monthly Sonar run reads it). Admin: stray circle ALISAMED-6015 merged into FAMILY-1204 on 2026-10-14.
 - 2026-09-30 (v6) — Vacation-first default copy throughout; acquisition track behind a per-circle switch (`show_acquisition`, off by default) enforced in RLS for sale listings; friendly intro section; toggle in circle bar and admin console.
 - 2026-09-30 (v5) — Admin console: `trip_admins` + 12 admin RPCs (overview, move, merge circles/households, rename, set head, lock votes, set name, set temp password, delete account/household/circle). 14-check live test passed.
