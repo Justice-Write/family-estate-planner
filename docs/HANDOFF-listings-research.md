@@ -99,17 +99,6 @@ Inactive (keep rows; reactivate only with new evidence): `turin-castle`, `auchen
 
 The 2026-09-29 pass is in `supabase/data/listings-2026-09-29.sql` — read it first; it is the baseline you are updating.
 
----|---|---|
-| `turin-castle` | Turin Castle, Co. Mayo | rental |
-| `craigston-castle` | Craigston Castle, Aberdeenshire | rental |
-| `springkell-estate` | Springkell Estate, Dumfriesshire | rental |
-| `auchen-castle` | Auchen Castle, Dumfries & Galloway | rental |
-| `deux-sevres-chateau` | 17th-Century Chateau, Deux-Sèvres | sale |
-| `tuscan-villa` | Tuscan Stone Villa | sale |
-| `nagano-kominka` | Edo-Period Kominka, Nagano/Gifu | sale |
-
-All seven currently have **placeholder images** and estimated prices. Verifying and replacing those is priority one; new listings are priority two.
-
 ---
 
 ## 4. Also deliver: `notes-YYYY-MM-DD.md`

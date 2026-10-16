@@ -53,6 +53,8 @@ Header dropdown converts every structured price (`rental_amount`/`rental_currenc
 ## Updating listings (the research loop)
 Hand `docs/HANDOFF-listings-research.md` to a research agent (Perplexity Computer). It returns one `listings-DATE.sql`; paste it into the Supabase SQL editor. Read family suggestions first with `select * from public.trip_list_suggestions();` and paste the output into the brief.
 
+For the Dec 15 – Jan 5 trip, run `docs/BRIEF-2026-10-16-availability-pass.md` first: rentals only, availability in the window confirmed, fully booked cards set `active = false`. The full round-two brief (sale targets) comes after the trip is booked.
+
 ## Adding properties
 ```sql
 insert into public.trip_properties (id, name, location, status, details, risk, risk_level, sort) values
@@ -67,6 +69,7 @@ update public.trip_parties set votes_locked = false where code = 'SMITH-1234';
 ```
 
 ## Changelog
+- 2026-10-16 — Availability-first research brief for the Dec 15 – Jan 5 window (`docs/BRIEF-2026-10-16-availability-pass.md`). Removed the stale round-one placeholder-image table from the handoff brief (the monthly Sonar run reads it). Admin: stray circle ALISAMED-6015 merged into FAMILY-1204 on 2026-10-14.
 - 2026-09-30 (v6) — Vacation-first default copy throughout; acquisition track behind a per-circle switch (`show_acquisition`, off by default) enforced in RLS for sale listings; friendly intro section; toggle in circle bar and admin console.
 - 2026-09-30 (v5) — Admin console: `trip_admins` + 12 admin RPCs (overview, move, merge circles/households, rename, set head, lock votes, set name, set temp password, delete account/household/circle). 14-check live test passed.
 - 2026-09-29 (v4) — Circles (groups) with invite codes; all party/vote/suggestion queries scoped per circle; circle-wide tally RPC. Structured prices + header currency selector with live ECB rates. Weekly link-health and monthly research-refresh workflows. Research brief round two: price cap lifted, source diversity rule, structured price fields required.
