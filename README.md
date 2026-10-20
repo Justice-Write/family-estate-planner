@@ -1,5 +1,7 @@
 # Family Estate & Trip Planner
 
+> **Start here:** [`status-handoff.md`](status-handoff.md) is the live project status and the working protocol for every agent (update it before and after any work).
+
 Static site (no build step) + Supabase. Everything in `public/` is the deployable.
 
 ## Stack
@@ -70,6 +72,7 @@ update public.trip_parties set votes_locked = false where code = 'SMITH-1234';
 ```
 
 ## Changelog
+- 2026-10-20 — Added `status-handoff.md` (live status + mandatory before/after update protocol for every agent) and `AGENTS.md` / `CLAUDE.md` pointers to it.
 - 2026-10-16 — Research script moved from Sonar `/chat/completions` (support ended 2026-09-27) to the Agent API (`/v1/agent`, background + polling, preset `high`; no `PPLX_MODEL` variable needed) and validates output before writing. Health check script now surfaces a missing/wrong secret through the issue step instead of passing silently (it had been a silent no-op). Workflow YAML unchanged. Both tested against a local mock API.
 - 2026-10-16 — Availability-first research brief for the Dec 15 – Jan 5 window (`docs/BRIEF-2026-10-16-availability-pass.md`). Removed the stale round-one placeholder-image table from the handoff brief (the monthly Sonar run reads it). Admin: stray circle ALISAMED-6015 merged into FAMILY-1204 on 2026-10-14.
 - 2026-09-30 (v6) — Vacation-first default copy throughout; acquisition track behind a per-circle switch (`show_acquisition`, off by default) enforced in RLS for sale listings; friendly intro section; toggle in circle bar and admin console.
