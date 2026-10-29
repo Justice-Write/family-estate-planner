@@ -1,7 +1,7 @@
 # status-handoff — Family Estate & Trip Planner
 
-**Last updated:** 2026-10-20 by Claude (Cowork, model claude-opus-5-5)
-**Canonical:** this file is the single source of truth for project status. `README.md` holds the deeper technical reference.
+**Last updated:** 2026-10-29 08:20 UTC by Claude (Cowork, claude-opus-5-5), family-estate-planner project session (recovery pass)
+**Canonical:** this file is the single source of truth for project status. `README.md` holds the deeper technical reference. **`RECOVERY-HANDOFF-2026-10-28.md`** holds the full background: inception and intention, every feature you asked for, and the roadmap with progress.
 
 ---
 
@@ -25,7 +25,7 @@ Any LLM or person working in this repo follows these rules. No exceptions for "s
 
 ## 1. In progress
 
-_Nothing in progress._
+_Nothing in progress._ (Commit and push of the 2026-10-29 docs is pending; see §6 item 0.)
 
 ---
 
@@ -70,32 +70,32 @@ A private website where Christian's extended family plans one annual group trip.
 - **Add an admin:** `insert into trip_admins(user_id) select id from auth.users where email='…';`
 - **Unlock a household's votes:** `update trip_parties set votes_locked = false where code = '…';`
 
-## 5. Current state (as of 2026-10-20)
+## 5. Current state (as of 2026-10-29)
 
-- **Site:** live. `origin/main` = `2f8d9b3`; local `main` is 1 commit ahead (this handoff, unpushed — see §6 item 0).
-- **Circles:** one circle, FAMILY-1204 "Christian's Family", with 4 members. A stray one-person circle (ALISAMED-6015) was merged into it on 2026-10-14.
-- **Votes:** **0** as of 2026-10-14, the last time the database could be read. Not re-checked since (see access note below).
-- **Listings:** 19 rows, 14 active (11 rentals, 3 sale), per the 2026-09-29 baseline. No newer listings file is committed, so the Oct 16 availability pass has either not run or has not been committed.
-- **GitHub Actions:**
-  - The repo has **no secrets and no variables** (checked 2026-10-16).
-  - The 2026-10-19 health check correctly opened **issue #1**, which says `SUPABASE_SERVICE_ROLE_KEY` is not set. That run also confirmed the Oct 16 fix works.
-  - The research job will fail on Nov 1 unless `PERPLEXITY_API_KEY` is added.
-- **Supabase access for agents:** the Claude Supabase connector is currently authorized only for a different Supabase org (`eizfsooqavulpjngwsbd`). This project lives in org "Castleborn - Free", so MCP queries return "You do not have permission".
-- **Family outreach:** a vote nudge message with a Sun Oct 25 deadline was drafted on 2026-10-16. Unknown whether it was sent.
+- **Site:** live at https://family-estate-planner.pages.dev. `origin/main` = `2f8d9b3`. Local `main` is 1 commit ahead (`f1a0e02`, docs only). The working tree has 3 uncommitted docs from the 10-29 recovery pass (`status-handoff.md`, `RECOVERY-HANDOFF-2026-10-28.md`, `README.md`). Nothing else is uncommitted.
+- **ChatGPT history loss (10-28):** no effect on this project. It was never a ChatGPT or Codex project; its history lives in this repo and the Claude project.
+- **Local-only branch:** `codex/listing-workflows-review-20261001` (`cc44bb7`) is superseded by `3343c23` (same workflow files). Kept.
+- **Circles:** one circle, FAMILY-1204 "Christian's Family", with 4 members (ALISAMED-6015 merged in on 2026-10-14).
+- **Votes:** **0** as of 2026-10-14, the last database read. The Oct 25 vote deadline in the drafted nudge has passed; result unknown.
+- **Listings:** 19 rows, 14 active (11 rentals, 3 sale), per the 2026-09-29 baseline. The 10-16 availability pass has not been committed (probably not run).
+- **GitHub Actions:** the repo still has **no secrets** (checked 2026-10-29). The health check ran 10-19 and 10-26 and correctly opened, then commented on, **issue #1** (`SUPABASE_SERVICE_ROLE_KEY` not set). The research job will fail on **Nov 1** without `PERPLEXITY_API_KEY`.
+- **Supabase access for agents:** the connector is authorized only for org `eizfsooqavulpjngwsbd`. This project is in "Castleborn - Free", so queries return "You do not have permission".
+- **Claude shell:** Cowork's Linux shell lost its mount to the PC at about 22:20 AKDT on 10-28, so git can't run from Cowork until the desktop app or PC restarts. File tools still work.
 
 ## 6. Open items
 
 **Needs Christian (agents cannot do these):**
-0. **Push the local commit** "docs: add status-handoff.md with agent update protocol" (GitHub Desktop → Ctrl+P). It was committed 2026-10-20 but could not be pushed: another Claude session held the computer. *Next agent: once `origin/main` contains it, delete this line.*
-1. **Add repo secrets** `SUPABASE_SERVICE_ROLE_KEY` and `PERPLEXITY_API_KEY` under Settings → Secrets and variables → Actions. Then run Actions → "Listing health check" → Run workflow, and close issue #1 once it is green.
-2. **Send the family vote nudge.** Voting deadline: Sun Oct 25.
-3. **Run `docs/BRIEF-2026-10-16-availability-pass.md`** in Perplexity Computer, apply the SQL it returns, and commit it as `supabase/data/listings-2026-10-XX.sql`.
+0. **Commit and push.** In GitHub Desktop, select family-estate-planner, commit the 3 changed docs, then Push origin. This also sends `f1a0e02`. The shared `_ops/recovery-2026-10-28/recovery-backup-and-push.ps1` holds `main` (HOLD-MAIN) on purpose, so push this one by hand. It is safe: docs only. *Next agent: once `origin/main` has the 10-29 docs commit, delete this line.*
+1. **Check votes** in the Admin console. If still none, re-send the nudge (text in `RECOVERY-HANDOFF-2026-10-28.md` §4) with a new deadline. The trip window opens **Dec 15**.
+2. **Run `docs/BRIEF-2026-10-16-availability-pass.md`** in Perplexity Computer. Apply the SQL it returns, then commit it as `supabase/data/listings-2026-1X-XX.sql`.
+3. **Add repo secrets** `SUPABASE_SERVICE_ROLE_KEY` and `PERPLEXITY_API_KEY` (Settings → Secrets and variables → Actions). Then Actions → "Listing health check" → Run workflow, and close issue #1 when it is green.
 4. **Reconnect the Claude Supabase connector** and grant org "Castleborn - Free".
 
 **Agent-doable once unblocked:**
-5. After the secrets exist: dispatch both workflows, confirm they work against the real APIs (both scripts have only been tested against a local mock), and review the research PR.
+5. After the secrets exist: dispatch both workflows, confirm they work against the real APIs (only mock-tested so far), and review the research PR.
 6. After database access returns: re-check votes, members and listings, then update §5.
-7. Clean up `listing-research.yml`. It still passes an unused `PPLX_MODEL` variable and lacks a `timeout-minutes` limit. This needs a **local** edit (see Gotchas).
+7. Clean up `listing-research.yml`: it passes an unused `PPLX_MODEL` and has no `timeout-minutes`. This needs a **local** edit (see Gotchas).
+8. Optionally delete the superseded local branch `codex/listing-workflows-review-20261001` once the OneDrive bundle exists.
 
 ## 7. Gotchas for agents
 
@@ -107,6 +107,8 @@ A private website where Christian's extended family plans one annual group trip.
 - **The owner wants** decisive, concise output. Don't recap. When another tool fits a sub-task better (for example Perplexity Computer for live listing research), say so and hand over a ready-to-paste brief.
 
 ## 8. Work log (newest first)
+
+- **2026-10-29 — Claude (Cowork, claude-opus-5-5), recovery pass:** after the ChatGPT history loss, checked this repo. Found no uncommitted code. Found 1 unpushed docs commit (`f1a0e02`) and 1 superseded local branch (`cc44bb7`). Re-checked GitHub: no secrets, issue #1 re-flagged 10-26. Database still unreachable from Claude. Wrote `RECOVERY-HANDOFF-2026-10-28.md` (recovery report, inception and intention, roadmap of prompted features, planned roadmap with status). Updated this file and the README changelog. **Not committed:** git can't run from Cowork (shell mount down since about 22:20 AKDT 10-28). Owner action is §6 item 0. Verified: file contents written to disk. Not verified: database state.
 
 - **2026-10-20 — Claude (Cowork, claude-opus-5-5):** created `status-handoff.md` (this file) with its operating protocol, plus `AGENTS.md` and `CLAUDE.md` pointers. Confirmed the Oct 19 health run opened issue #1 (secret missing), so the Oct 16 fix works. Supabase is still unreachable from the connector. Committed locally; **push pending** (computer in use by another session).
 - **2026-10-16 — Claude (Cowork):**
