@@ -12,11 +12,11 @@
 |---|---|
 | Did the ChatGPT loss touch this project? | **No.** It was never a ChatGPT project: it is not among the 33 in the local ChatGPT Projects mirror, and Codex has no threads for it. All of its history lives in this repo, the Claude project "family estate planner", and Supabase. |
 | Uncommitted work | **None.** Working tree clean on `main` (read-only scan, 2026-10-29 ~06:00 UTC). |
-| Committed but not on GitHub | `f1a0e02` "docs: add status-handoff.md with agent update protocol" (2026-10-20). It is docs only and still local. |
+| Committed but not on GitHub | `f1a0e02` "docs: add status-handoff.md with agent update protocol" (2026-10-20), docs only. **Now pushed** (see below). |
 | Local-only branch | `codex/listing-workflows-review-20261001` (`cc44bb7`, 2026-09-30, Codex). Its workflow files match `main`'s `3343c23` byte-for-byte apart from line endings, so it is **superseded**. Kept, not deleted. |
 | Codex worktree | `Documents\Codex\2026-09-30\task-4\family-listing-workflows-review`: clean. Same content as above. |
-| Saved this session | This file, an updated `status-handoff.md`, and a README changelog line, all written to disk. **Commit and push are pending**: the Claude Linux shell lost its mount to the PC at about 22:20 AKDT on 10-28, so git can't run from Cowork. |
-| Off-machine backup | `_ops/recovery-2026-10-28/recovery-backup-and-push.ps1` bundles every repo, including this one, to OneDrive. That script never pushes `main`, so it will list this repo as **HOLD-MAIN**. Pushing `main` here is safe: the commits are docs only, and Cloudflare Pages redeploys an unchanged `public/`. |
+| Saved this session | This file, an updated `status-handoff.md`, and a README changelog line. **Committed and pushed** through GitHub Desktop as `f6f9a9c`, together with the Oct 20 docs commit `f1a0e02` (verified on GitHub 2026-10-29 06:38 UTC). The Claude Linux shell has been down since about 22:20 AKDT on 10-28, so GitHub Desktop was used instead of git. |
+| Off-machine backup | GitHub now holds all of `main`. `_ops/recovery-2026-10-28/recovery-backup-and-push.ps1` will also bundle this repo to OneDrive, including the superseded local branch. |
 | GitHub Actions | Issue #1 is open. The health check runs every Monday; on 10-19 and again on 10-26 it reported that `SUPABASE_SERVICE_ROLE_KEY` is not set. The repo has **no** Actions secrets (checked 2026-10-29). |
 | Database | Not checkable from Claude. The Supabase connector is authorized for a different org, while this project lives in org "Castleborn - Free". The last reading (2026-10-14) was 1 circle, 4 members, **0 votes**. |
 
@@ -69,8 +69,8 @@ The plan was for about five households to form one LLC, pool capital (the site s
 | 9 | 10-13 | "Anything left to do?" plus merge Alisa's stray circle | `trip_admin_merge_groups`: FAMILY-1204 now has 4 members | ✅ 10-14 |
 | 10 | 10-16 | Continue the roadmap: next listings round | Availability-first brief for the Dec 15 – Jan 5 window (`576c3eb`, `docs/BRIEF-2026-10-16-availability-pass.md`) | 🟡 written; **not run yet** |
 | 11 | 10-16 | "Continue on roadmap until nothing left" | Research job moved off the retired Sonar API; health check stopped passing silently; `listing-health` label created; family vote nudge drafted (deadline **Oct 25**) | ✅ code. 🟡 nudge: unknown whether it was sent |
-| 12 | 10-20 | An always-current `status-handoff.md` in every project, updated before and after work | `f1a0e02` (+ `AGENTS.md`, `CLAUDE.md`) | ✅ on disk; **not pushed** |
-| 13 | 10-28 | Recovery after the ChatGPT loss, plus this handoff | This file + `status-handoff.md` update | ✅ written; commit and push pending |
+| 12 | 10-20 | An always-current `status-handoff.md` in every project, updated before and after work | `f1a0e02` (+ `AGENTS.md`, `CLAUDE.md`) | ✅ pushed 10-29 |
+| 13 | 10-28 | Recovery after the ChatGPT loss, plus this handoff | This file + `status-handoff.md` update (`f6f9a9c`) | ✅ pushed 10-29 |
 
 ---
 
@@ -105,18 +105,16 @@ Circles with invite codes already keep groups fully separate. Nobody outside FAM
 
 ### Ops backlog
 - Reconnect the Claude Supabase connector to org "Castleborn - Free" so agents can check votes and apply listing SQL.
-- Push `main` (see §0).
 - Outside this project, noted once: a GitHub Enterprise "R3d Academy" plan at about $21/mo and an empty MyPersonas GitHub org.
 
 ---
 
 ## 4. Next actions, in order
 
-1. **Commit and push this repo.** In GitHub Desktop, select family-estate-planner, commit the 3 changed files, then Push origin. This sends `f1a0e02` plus today's docs.
-2. **Check votes** in the site's Admin console. If they're still at zero, re-send the nudge below with a new deadline.
-3. **Run the availability pass:** paste `docs/BRIEF-2026-10-16-availability-pass.md` into Perplexity Computer, apply the returned SQL in the Supabase SQL editor, and commit it as `supabase/data/listings-2026-1X-XX.sql`.
-4. **Add the repo secrets** `SUPABASE_SERVICE_ROLE_KEY` and `PERPLEXITY_API_KEY` (Settings → Secrets and variables → Actions). Then use "Run workflow" on the link check and close issue #1.
-5. **Reconnect the Supabase connector** to the "Castleborn - Free" org.
+1. **Check votes** in the site's Admin console. If they're still at zero, re-send the nudge below with a new deadline.
+2. **Run the availability pass:** paste `docs/BRIEF-2026-10-16-availability-pass.md` into Perplexity Computer, apply the returned SQL in the Supabase SQL editor, and commit it as `supabase/data/listings-2026-1X-XX.sql`.
+3. **Add the repo secrets** `SUPABASE_SERVICE_ROLE_KEY` and `PERPLEXITY_API_KEY` (Settings → Secrets and variables → Actions). Then use "Run workflow" on the link check and close issue #1.
+4. **Reconnect the Supabase connector** to the "Castleborn - Free" org.
 
 **Vote nudge (re-send with a new date):**
 > Hey everyone! Christmas trip time. The castles and villas are up at https://family-estate-planner.pages.dev. Please look through them, heart your favorites and add the dates that work for you (anywhere Dec 15 – Jan 5) by **[new date]**. Holiday dates book fast, so we'll lock one in right after. New to the site? Sign up with code **FAMILY-1204**. Forgot your password? Text me and I'll reset it.
