@@ -6,6 +6,8 @@ permissions: { contents: write, pull-requests: write }
 jobs:
   research:
     runs-on: ubuntu-latest
+    # The script stops polling after 60 minutes; allow bounded setup/PR overhead.
+    timeout-minutes: 70
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -13,7 +15,6 @@ jobs:
       - run: node scripts/research-refresh.mjs
         env:
           PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
-          PPLX_MODEL: ${{ vars.PPLX_MODEL }}
       - uses: peter-evans/create-pull-request@v6
         with:
           branch: research/refresh

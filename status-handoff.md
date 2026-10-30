@@ -25,6 +25,9 @@ Any LLM or person working in this repo follows these rules. No exceptions for "s
 
 ## 1. In progress
 
+- 2026-10-29 Codex release-round: complete the explicitly listed workflow housekeeping (bounded timeout, remove unused PPLX_MODEL); isolated worktree, update handoff/README, no API calls or database writes.
+
+
 _Nothing in progress._
 
 ---
@@ -93,7 +96,7 @@ A private website where Christian's extended family plans one annual group trip.
 **Agent-doable once unblocked:**
 5. After the secrets exist: dispatch both workflows, confirm they work against the real APIs (only mock-tested so far), and review the research PR.
 6. After database access returns: re-check votes, members and listings, then update §5.
-7. Clean up `listing-research.yml`: it passes an unused `PPLX_MODEL` and has no `timeout-minutes`. This needs a **local** edit (see Gotchas).
+7. Workflow housekeeping completed in the October release continuation: removed the unused model variable and bounded the job at 70 minutes.
 8. Optionally delete the superseded local branch `codex/listing-workflows-review-20261001` once the OneDrive bundle exists.
 
 ## 7. Gotchas for agents
@@ -118,3 +121,7 @@ A private website where Christian's extended family plans one annual group trip.
 - **2026-09-30 — v6:** vacation-first default; acquisition track behind the per-circle `show_acquisition` switch. **v5:** admin console (12 admin RPCs).
 - **2026-09-29 — v2–v4:** full design port, listing URLs and galleries, circles with invite codes, live currency conversion, research brief round two. Moved to the dedicated Supabase project; deployed to Cloudflare Pages.
 - **2026-09-28:** initial build (schema + RLS, Supabase auth, households, votes).
+
+## Release continuation — 2026-10-29
+
+Codex completed the previously listed agent-doable workflow cleanup in isolated branch codex/family-research-timeout-20261029: 70-minute job timeout around the existing 60-minute script polling budget; removed unused PPLX_MODEL environment input. Schedule, database operations and paid-provider calls unchanged. No workflow was dispatched and no provider API was called. Script syntax/YAML validation is the relevant check; credentials, votes, listing availability and Supabase access remain blocked as documented. Publication pending at this entry.
