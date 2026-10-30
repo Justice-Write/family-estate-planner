@@ -25,7 +25,6 @@ Any LLM or person working in this repo follows these rules. No exceptions for "s
 
 ## 1. In progress
 
-- 2026-10-29 Codex release-round: complete the explicitly listed workflow housekeeping (bounded timeout, remove unused PPLX_MODEL); isolated worktree, update handoff/README, no API calls or database writes.
 
 
 _Nothing in progress._
@@ -110,6 +109,9 @@ A private website where Christian's extended family plans one annual group trip.
 
 ## 8. Work log (newest first)
 
+- **2026-10-29 Codex release-round:** completed listed workflow housekeeping, validated YAML and both Node script syntaxes, pushed 7371d5c to main/review branch. No provider calls, database writes or public application code changes.
+
+
 - **2026-10-29 — Claude (Cowork, claude-opus-5-5), recovery pass:** after the ChatGPT history loss, checked this repo. Found no uncommitted code. Found 1 unpushed docs commit (`f1a0e02`) and 1 superseded local branch (`cc44bb7`). Re-checked GitHub: no secrets, issue #1 re-flagged 10-26. Database still unreachable from Claude. Wrote `RECOVERY-HANDOFF-2026-10-28.md` (recovery report, inception and intention, roadmap of prompted features, planned roadmap with status). Updated this file and the README changelog. Committed and pushed through GitHub Desktop as `f6f9a9c` (verified on GitHub at 06:38 UTC); this log update was pushed the same way. Verified: GitHub commit list. Not verified: database state.
 
 - **2026-10-20 — Claude (Cowork, claude-opus-5-5):** created `status-handoff.md` (this file) with its operating protocol, plus `AGENTS.md` and `CLAUDE.md` pointers. Confirmed the Oct 19 health run opened issue #1 (secret missing), so the Oct 16 fix works. Supabase is still unreachable from the connector. Committed locally; **push pending** (computer in use by another session).
@@ -124,4 +126,4 @@ A private website where Christian's extended family plans one annual group trip.
 
 ## Release continuation — 2026-10-29
 
-Codex completed the previously listed agent-doable workflow cleanup in isolated branch codex/family-research-timeout-20261029: 70-minute job timeout around the existing 60-minute script polling budget; removed unused PPLX_MODEL environment input. Schedule, database operations and paid-provider calls unchanged. No workflow was dispatched and no provider API was called. Script syntax/YAML validation is the relevant check; credentials, votes, listing availability and Supabase access remain blocked as documented. Publication pending at this entry.
+Codex completed the previously listed agent-doable workflow cleanup in isolated branch codex/family-research-timeout-20261029: 70-minute job timeout around the existing 60-minute script polling budget; removed unused PPLX_MODEL environment input. Schedule, database operations and paid-provider calls unchanged. No workflow was dispatched and no provider API was called. Script syntax/YAML validation is the relevant check; credentials, votes, listing availability and Supabase access remain blocked as documented. Workflow and documentation commit 7371d5c is pushed to main and the release branch; GitHub reports the existing workflow active. Credentials and database/provider acceptance remain blocked, so no research or health-check workflow was dispatched.
