@@ -1,6 +1,6 @@
 # Family Estate & Trip Planner
 
-> **Start here:** [`status-handoff.md`](status-handoff.md) is the live project status and the working protocol for every agent (update it before and after any work). Full background (inception, every requested feature, roadmap with progress): [`RECOVERY-HANDOFF-2026-10-28.md`](RECOVERY-HANDOFF-2026-10-28.md).
+> **Start here:** [`status-handoff.md`](status-handoff.md) is the live project status and the working protocol for every agent (update it before and after any work). Public recovery index: [`RECOVERY-HANDOFF-2026-10-28.md`](RECOVERY-HANDOFF-2026-10-28.md).
 
 Static site (no build step) + Supabase. Everything in `public/` is the deployable.
 
@@ -43,7 +43,7 @@ Admins are rows in `trip_admins` (Christian seeded). An **Admin** button appears
 `trip_groups.show_acquisition` (default **false**). Off: the site reads as a family-vacation planner — no LLC/syndicate copy, no investment questions, and `sale` listings are hidden by RLS (not just CSS). On: the "Master Plan" explainer, buy-target cards, acquisition prices and the capital/income questions appear. Toggle: checkbox in the circle bar (circle owner or admin) or the eye button per circle in the Admin console.
 
 ## Circles (groups)
-Each extended family / friend group is a **circle** with an invite code. Parties, votes, suggestions and the party dropdown are all scoped to the circle. Listings with `group_id = null` are the shared catalog every circle sees; a row with `group_id` set is private to that circle. Christian's existing data was migrated into the circle **"Christian's Family"**. Rename: `update trip_groups set name = '…' where code = 'FAMILY-1204';`
+Each extended family / friend group is a **circle** with an invite code. Parties, votes, suggestions and the party dropdown are all scoped to the circle. Listings with `group_id = null` are the shared catalog every circle sees; a row with `group_id` set is private to that circle. Christian's existing data was migrated into the circle **"Christian's Family"**. Rename: `update trip_groups set name = '…' where code = '[PRIVATE INVITE CODE REMOVED]';`
 
 ## Currency
 Header dropdown converts every structured price (`rental_amount`/`rental_currency`/`rental_unit`, `buy_amount`/`buy_currency`) into the chosen currency using live ECB rates from api.frankfurter.dev (falls back to the research payload's planning rates for EUR/GBP). Choice is saved to the user's auth metadata + localStorage. Unstructured prices show their raw text.
@@ -70,14 +70,14 @@ insert into public.trip_properties (id, name, location, status, details, risk, r
 
 ## Unlocking a party's votes
 ```sql
-update public.trip_parties set votes_locked = false where code = 'SMITH-1234';
+update public.trip_parties set votes_locked = false where code = '[PRIVATE INVITE CODE REMOVED]';
 ```
 
 ## Changelog
 - 2026-10-29 — Recovery pass after the ChatGPT history loss (this project wasn't affected): added `RECOVERY-HANDOFF-2026-10-28.md` and refreshed `status-handoff.md`.
 - 2026-10-20 — Added `status-handoff.md` (live status + mandatory before/after update protocol for every agent) and `AGENTS.md` / `CLAUDE.md` pointers to it.
 - 2026-10-16 — Research script moved from Sonar `/chat/completions` (support ended 2026-09-27) to the Agent API (`/v1/agent`, background + polling, preset `high`; no `PPLX_MODEL` variable needed) and validates output before writing. Health check script now surfaces a missing/wrong secret through the issue step instead of passing silently (it had been a silent no-op). Workflow YAML unchanged. Both tested against a local mock API.
-- 2026-10-16 — Availability-first research brief for the Dec 15 – Jan 5 window (`docs/BRIEF-2026-10-16-availability-pass.md`). Removed the stale round-one placeholder-image table from the handoff brief (the monthly Sonar run reads it). Admin: stray circle ALISAMED-6015 merged into FAMILY-1204 on 2026-10-14.
+- 2026-10-16 — Availability-first research brief for the Dec 15 – Jan 5 window (`docs/BRIEF-2026-10-16-availability-pass.md`). Removed the stale round-one placeholder-image table from the handoff brief (the monthly Sonar run reads it). Admin: stray circle [PRIVATE INVITE CODE REMOVED] merged into [PRIVATE INVITE CODE REMOVED] on 2026-10-14.
 - 2026-09-30 (v6) — Vacation-first default copy throughout; acquisition track behind a per-circle switch (`show_acquisition`, off by default) enforced in RLS for sale listings; friendly intro section; toggle in circle bar and admin console.
 - 2026-09-30 (v5) — Admin console: `trip_admins` + 12 admin RPCs (overview, move, merge circles/households, rename, set head, lock votes, set name, set temp password, delete account/household/circle). 14-check live test passed.
 - 2026-09-29 (v4) — Circles (groups) with invite codes; all party/vote/suggestion queries scoped per circle; circle-wide tally RPC. Structured prices + header currency selector with live ECB rates. Weekly link-health and monthly research-refresh workflows. Research brief round two: price cap lifted, source diversity rule, structured price fields required.
