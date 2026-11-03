@@ -64,3 +64,6 @@ Owner must rotate historically exposed invite codes, review memberships and supp
 
 ### Work log
 2026-11-02 Codex01a130c5-3018: completed scoped qualification on patched portable toolchains; original owner checkouts/index preserved. Runtime binaries, downloaded test wheels, QA artifacts and raw receipts stay outside source. Source commit/push follow the ready feature branch; installed and deployed copies remain unchanged. No active writer remains after the commit.
+
+### Verified GitHub source backup
+Security source commit 38a50383a7696ad88830da5ba38312191015c194 pushed and exact remote branch readback verified. Draft PR: https://github.com/Justice-Write/family-estate-planner/pull/2. No merge/deployment/install. Hosted checks are independent and remain under review; local qualification above is complete. The public-root handoff exception continues to apply.
