@@ -50,3 +50,17 @@ Owner: rotate previously exposed live circle invite codes, review memberships, c
 ## 7. Work log
 
 - 2026-10-30 Codex: maintained bounded research workflow without provider/DB calls; preserved historical source; separated private operator handoffs from public source after finding invite codes. Existing history remains preserved, requiring owner rotation rather than an unauthorized history rewrite or database action.
+
+## Security qualification and source backup — 2026-11-02
+
+### Current source checkpoint
+Owner explicitly authorized testing, coherent commits and pushing ready isolated feature branches. No default-branch merge, deployment, device install, OS trust change, provider or content action. Source baseline d9f7c8e5a714e61736ed4f63474d331b4cb939e7. Candidate branch codex/security-runtime-20261102-family.
+
+### Verification
+Node22.23.4 parses both provider scripts; YAML/floor/whitespace checks pass. Neither research nor health provider job executed; actual provider acceptance remains gated.
+
+### Installed apps / exact owner actions
+Owner must rotate historically exposed invite codes, review memberships and supply provider secrets/correct organization through approved UI. No package/app reinstall is indicated for CI-only changes.
+
+### Work log
+2026-11-02 Codex01a130c5-3018: completed scoped qualification on patched portable toolchains; original owner checkouts/index preserved. Runtime binaries, downloaded test wheels, QA artifacts and raw receipts stay outside source. Source commit/push follow the ready feature branch; installed and deployed copies remain unchanged. No active writer remains after the commit.
