@@ -50,3 +50,23 @@ Owner: rotate previously exposed live circle invite codes, review memberships, c
 ## 7. Work log
 
 - 2026-10-30 Codex: maintained bounded research workflow without provider/DB calls; preserved historical source; separated private operator handoffs from public source after finding invite codes. Existing history remains preserved, requiring owner rotation rather than an unauthorized history rewrite or database action.
+
+## Security qualification and source backup — 2026-11-02
+
+### Current source checkpoint
+Owner explicitly authorized testing, coherent commits and pushing ready isolated feature branches. No default-branch merge, deployment, device install, OS trust change, provider or content action. Source baseline d9f7c8e5a714e61736ed4f63474d331b4cb939e7. Candidate branch codex/security-runtime-20261102-family.
+
+### Verification
+Node22.23.4 parses both provider scripts; YAML/floor/whitespace checks pass. Neither research nor health provider job executed; actual provider acceptance remains gated.
+
+### Installed apps / exact owner actions
+Owner must rotate historically exposed invite codes, review memberships and supply provider secrets/correct organization through approved UI. No package/app reinstall is indicated for CI-only changes.
+
+### Work log
+2026-11-02 Codex01a130c5-3018: completed scoped qualification on patched portable toolchains; original owner checkouts/index preserved. Runtime binaries, downloaded test wheels, QA artifacts and raw receipts stay outside source. Source commit/push follow the ready feature branch; installed and deployed copies remain unchanged. No active writer remains after the commit.
+
+### Verified GitHub source backup
+Security source commit 38a50383a7696ad88830da5ba38312191015c194 pushed and exact remote branch readback verified. Draft PR: https://github.com/Justice-Write/family-estate-planner/pull/2. No merge/deployment/install. Hosted checks are independent and remain under review; local qualification above is complete. The public-root handoff exception continues to apply.
+
+### Automatic branch-preview boundary — verified November2
+The existing Cloudflare Git integration automatically publishes branch previews on source pushes. It reported successful Preview deployment c1fc5231-174d-48a3-b43c-288480f10b2b for7f2eaab at https://c1fc5231.family-estate-planner.pages.dev; production main remained d9f7c8e5a714e61736ed4f63474d331b4cb939e7 at remote preflight. Authenticated read-only CLI deployment metadata confirms Preview environment/branch. Unauthenticated root/app.js reads returned200 and match source after CRLF normalization. The frontend session-change/sign-in guard is retained; both preview and production source use the same hardcoded Supabase project configuration. This is not an isolated test database. Actual RLS/memberships and CloudflareAccess policy configuration were not queried or changed; no sign-in, SQL, real-data or membership action performed. Owner should review intended preview access/shared-backend policy along with invite rotation. Further branch pushes can create additional automatic previews. No manual deployment, production promotion or rollback performed.
